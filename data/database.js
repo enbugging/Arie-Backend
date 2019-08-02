@@ -42,7 +42,6 @@ var Tasks = mongoose.model("Tasks", task);
 async function readAllTasks(IDX, count, task) {
     let res;
     try {
-        console.log("Maximum number of returned tasks: " + count);
         if (count !== 0)
             res = await Tasks.find(task)
                 .sort({ createTime: 1 })
