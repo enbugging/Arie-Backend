@@ -21,7 +21,7 @@ var Schema = mongoose.Schema;
  * @param {Array} participantIDs : the list of participants' ID
  */
 var task = new Schema({
-    name: String, 
+    name: String,
     creator: String,
     description: String,
     places: Array,
@@ -42,10 +42,12 @@ var Tasks = mongoose.model("Tasks", task);
 async function readAllTasks(IDX, count, task) {
     let res;
     try {
-        res = await Tasks.find(task, "_id name description createTime")
-            .sort({ createTime: 1 })
-            .skip(Math.max(IDX - 1, 0))
-            .limit(count);
+        console.log("Maximum number of returned tasks: " + count);
+        if (count !== 0)
+            res = await Tasks.find(task)
+                .sort({ createTime: 1 })
+                .skip(Math.max(IDX - 1, 0))
+                .limit(count);
     } catch (err) {
         throw err;
     }
@@ -100,7 +102,7 @@ async function editTask(taskID, task) {
             { _id: taskID },
             {
                 name: task.name,
-                description: task.description, 
+                description: task.description,
                 places: task.places,
                 startTime: task.endTime,
                 endTime: task.endTime
