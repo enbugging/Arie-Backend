@@ -12,9 +12,9 @@ var Schema = mongoose.Schema;
 /**
  * Definition of a Task
  * @param {String} name : name of the task
- * @param {String} creator : name of the creator
+ * @param {String} creator : ID of the creator
  * @param {String} description : description of the task
- * @param {Array} places : places where the task will take place
+ * @param {Array} places : tasks' description and places where the task will take place
  * @param {Date} createTime : timestamp of task's creation
  * @param {Date} startTime : when the task will begin
  * @param {Date} endTime : when the task will end
@@ -80,7 +80,7 @@ async function createTask(task) {
         description: task.description,
         places: task.places,
         createTime: Date.now(),
-        startTime: task.endTime,
+        startTime: task.startTime,
         endTime: task.endTime,
         participantIDs: new Array()
     });
@@ -108,6 +108,19 @@ async function editTask(taskID, task) {
             }
         );
     } catch (err) {
+        throw err;
+    }
+}
+
+/**
+ * Delete an existing task
+ * @param {String} taskID 
+ * @param {String} userID 
+ */
+async function deleteTask(taskID, userID) {
+    try {
+        await Tasks.deleteOne({ _id : taskID, creator : userID });
+    } catch(err) {
         throw err;
     }
 }
@@ -145,5 +158,6 @@ module.exports = {
     readOneTask,
     createTask,
     editTask,
+    deleteTask, 
     subscribe
 };

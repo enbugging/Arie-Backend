@@ -4,7 +4,8 @@
  * GET tasks/?idx= & count= : retrieve general info of number of tasks
  * (including custom parameters to search)
  * GET tasks/:taskID : retrieve details of a particular task
- * PUT tasks/:taskID : edit existing task
+ * PATCH tasks/:taskID : edit existing task
+ * DELETE tasks/:taskID?userID= : delete existing task
  * POST tasks/:taskID?userID= : subscribe to a task
  */
 
@@ -39,7 +40,8 @@ router
                     res.send(docs);
                 },
                 err => {
-                    res.status(400).json(err.message);
+                    res.sendStatus(400);
+                    console.log(err.message);
                 }
             );
         }
@@ -64,12 +66,13 @@ router
                     res.send(docs);
                 },
                 err => {
-                    res.status(400).json(err.message);
+                    res.sendStatus(400);
+                    console.log(err.message);
                 }
             );
         }
     })
-    .put(bodyParser.json(), (req, res) => {
+    .patch(bodyParser.json(), (req, res) => {
         let task = req.body,
             taskID = req.params.taskID;
 
@@ -77,6 +80,16 @@ router
         else
             database
                 .editTask(taskID, task)
+                .then(() => res.sendStatus(200), () => res.sendStatus(400));
+    })
+    .delete((req, res) => {
+        let userID = req.query.userID,
+            taskID = req.param.taskID;
+
+        if (taskID.length === 0 || userID.length === 0) res.sendStatus(400);
+        else
+            database
+                .deleteTask(taskID, userID)
                 .then(() => res.sendStatus(200), () => res.sendStatus(400));
     })
     .post((req, res) => {
