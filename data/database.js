@@ -43,7 +43,7 @@ async function readAllTasks(IDX, count, task) {
     let res;
     try {
         if (count !== 0)
-            res = await Tasks.find(task)
+            res = await Tasks.find({ task : {$regrex : task, option: 'i'}})
                 .sort({ createTime: 1 })
                 .skip(Math.max(IDX - 1, 0))
                 .limit(count);
