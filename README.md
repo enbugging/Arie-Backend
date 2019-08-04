@@ -1,5 +1,5 @@
 # Arie-Backend
-
+API being specifically build for Arie application
 <b> API Guide </b>
  * Routes in this API, by order
  * POST tasks : create new task
