@@ -40,19 +40,26 @@ router
             database.readAllTasks(idx, count, searchTask).then(
                 docs => {
                     res.send(docs);
+                    res.sendStatus(200);
                 },
                 err => {
-                    res.sendStatus(400);
                     console.log(err.message);
+                    res.sendStatus(400);
                 }
             );
         }
     })
     .post(bodyParser.json(), (req, res) => {
         let task = req.body;
-        database.createTask(task).then(() => {
-            res.sendStatus(200);
-        });
+        database.createTask(task).then(
+            () => {
+                res.sendStatus(200);
+            },
+            err => {
+                console.log(err.message);
+                res.sendStatus(400);
+            }
+        );
     });
 
 // Get exact task by ID
@@ -80,9 +87,15 @@ router
 
         if (taskID.length === 0) res.sendStatus(400);
         else
-            database
-                .editTask(taskID, task)
-                .then(() => res.sendStatus(200), () => res.sendStatus(400));
+            database.editTask(taskID, task).then(
+                () => {
+                    res.sendStatus(200);
+                },
+                err => {
+                    console.log(err.message);
+                    res.sendStatus(400);
+                }
+            );
     })
     .delete((req, res) => {
         let userID = req.query.userID,
@@ -90,9 +103,15 @@ router
 
         if (taskID.length === 0 || userID.length === 0) res.sendStatus(400);
         else
-            database
-                .deleteTask(taskID, userID)
-                .then(() => res.sendStatus(200), () => res.sendStatus(400));
+            database.deleteTask(taskID, userID).then(
+                () => {
+                    res.sendStatus(200);
+                },
+                err => {
+                    console.log(err.message);
+                    res.sendStatus(400);
+                }
+            );
     })
     .post((req, res) => {
         let userID = req.query.userID,
@@ -100,9 +119,15 @@ router
 
         if (taskID.length === 0 || userID.length === 0) res.sendStatus(400);
         else
-            database
-                .subscribe(taskID, userID)
-                .then(() => res.sendStatus(200), () => res.sendStatus(400));
+            database.subscribe(taskID, userID).then(
+                () => {
+                    res.sendStatus(200);
+                },
+                err => {
+                    console.log(err.message);
+                    res.sendStatus(400);
+                }
+            );
     });
 
 module.exports = router;
