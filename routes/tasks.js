@@ -7,6 +7,7 @@
  * PATCH tasks/:taskID : edit existing task
  * DELETE tasks/:taskID?userID= : delete existing task
  * POST tasks/:taskID?userID= : subscribe to a task
+ * TODO: Morgan
  */
 
 "use strict";
@@ -19,19 +20,20 @@ const router = express.Router();
 
 router
     .route("/")
-    .get(bodyParser.json(), (req, res) => {
+    .get((req, res) => {
         let { idx, count } = req.query,
-            queryTask = req.body,
+            queryTask = JSON.parse(req.query.q || "{}"),
             searchTask = {};
 
         idx = Number(idx);
         count = Number(count);
-        if (queryTask.name) searchTask.name = queryTask.name;
-        if (queryTask.creator) searchTask.creator = queryTask.creator;
-        if (queryTask.city) searchTask.city = queryTask.city;
-        if (queryTask.country) searchTask.country = queryTask.country;
-        if (queryTask.startTime) searchTask.startTime = queryTask.startTime;
-        if (queryTask.endTime) searchTask.endTime = queryTask.endTime;
+        if (queryTask.name) searchTask.name = RegExp(queryTask.name);
+        if (queryTask.creator) searchTask.creator = RegExp(queryTask.creator);
+        if (queryTask.city) searchTask.city = RegExp(queryTask.city);
+        if (queryTask.country) searchTask.country = RegExp(queryTask.country);
+        if (queryTask.startTime)
+            searchTask.startTime = RegExp(queryTask.startTime);
+        if (queryTask.endTime) searchTask.endTime = RegExp(queryTask.endTime);
 
         if (isNaN(idx) || isNaN(count)) res.sendStatus(400);
         else {

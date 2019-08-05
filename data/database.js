@@ -43,7 +43,7 @@ async function readAllTasks(IDX, count, task) {
     let res;
     try {
         if (count !== 0)
-            res = await Tasks.find({ task : {$regrex : task, option: 'i'}})
+            res = await Tasks.find(task)
                 .sort({ createTime: 1 })
                 .skip(Math.max(IDX - 1, 0))
                 .limit(count);
@@ -114,13 +114,13 @@ async function editTask(taskID, task) {
 
 /**
  * Delete an existing task
- * @param {String} taskID 
- * @param {String} userID 
+ * @param {String} taskID
+ * @param {String} userID
  */
 async function deleteTask(taskID, userID) {
     try {
-        await Tasks.deleteOne({ _id : taskID, creator : userID });
-    } catch(err) {
+        await Tasks.deleteOne({ _id: taskID, creator: userID });
+    } catch (err) {
         throw err;
     }
 }
@@ -158,6 +158,6 @@ module.exports = {
     readOneTask,
     createTask,
     editTask,
-    deleteTask, 
+    deleteTask,
     subscribe
 };
