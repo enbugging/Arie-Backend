@@ -1,13 +1,7 @@
 "use strict";
 // template part
 const mongoose = require("mongoose");
-mongoose.connect("mongodb://localhost/test", { useNewUrlParser: true });
-const db = mongoose.connection;
-db.on("error", console.error.bind(console, "connection error:"));
-db.once("open", function() {
-    // we're connected!
-});
-var Schema = mongoose.Schema;
+const Schema = mongoose.Schema;
 
 /**
  * Definition of a Task
@@ -95,18 +89,23 @@ async function createTask(task) {
  * @param {String} taskID: id of task being edited
  * @param {Task} task: a task containing new information
  */
-async function editTask(taskID, task) {
+async function editTask(taskID, userID, task) {
+    let res;
     try {
-        await Tasks.updateOne(
-            { _id: taskID },
-            {
-                name: task.name,
-                description: task.description,
-                places: task.places,
-                startTime: task.endTime,
-                endTime: task.endTime
-            }
-        );
+        res = await Tasks.findById(taskID);
+        if (res.creator === userID) {
+            await Tasks.updateOne(
+                { _id: taskID },
+                {
+                    name: task.name,
+                    description: task.description,
+                    places: task.places,
+                    startTime: task.endTime,
+                    endTime: task.endTime
+                }
+            );
+        }
+        else throw new Error("Unauthorized attempt to edit tasks!");
     } catch (err) {
         throw err;
     }
@@ -118,8 +117,11 @@ async function editTask(taskID, task) {
  * @param {String} userID
  */
 async function deleteTask(taskID, userID) {
+    let res;
     try {
-        await Tasks.deleteOne({ _id: taskID, creator: userID });
+        res = await Tasks.findById(taskID);
+        if(res.creator === userID) await Tasks.deleteOne({ _id: taskID });
+        else throw new Error("Unauthorized attempt to delete tasks!");
     } catch (err) {
         throw err;
     }
@@ -154,6 +156,7 @@ async function subscribe(taskID, userID) {
 }
 
 module.exports = {
+    Tasks,
     readAllTasks,
     readOneTask,
     createTask,

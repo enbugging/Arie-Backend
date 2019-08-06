@@ -1,20 +1,19 @@
 /**
- * Routes in this API, by order
+ * Routes in this API, by order (also the order of test cases)
  * POST tasks : create new task
  * GET tasks/?idx= & count= : retrieve general info of number of tasks
  * (including custom parameters to search)
  * GET tasks/:taskID : retrieve details of a particular task
- * PATCH tasks/:taskID : edit existing task
- * DELETE tasks/:taskID?userID= : delete existing task
+ * PATCH tasks/:taskID?userID= : edit existing task
  * POST tasks/:taskID?userID= : subscribe to a task
- * TODO: Morgan
+ * DELETE tasks/:taskID?userID= : delete existing task
  */
 
 "use strict";
 
-const express = require("express");
-const database = require("../data/database.js");
-const bodyParser = require("body-parser");
+const express = require("express"),
+    database = require("../data/database.js"),
+    bodyParser = require("body-parser");
 
 const router = express.Router();
 
@@ -39,8 +38,7 @@ router
         else {
             database.readAllTasks(idx, count, searchTask).then(
                 docs => {
-                    res.send(docs);
-                    res.sendStatus(200);
+                    res.status(200).send(docs);
                 },
                 err => {
                     console.log(err.message);
@@ -72,7 +70,7 @@ router
         else {
             database.readOneTask(taskID).then(
                 docs => {
-                    res.send(docs);
+                    res.status(200).send(docs);
                 },
                 err => {
                     res.sendStatus(400);
@@ -83,11 +81,12 @@ router
     })
     .patch(bodyParser.json(), (req, res) => {
         let task = req.body,
-            taskID = req.params.taskID;
+            taskID = req.params.taskID,
+            userID = req.query.userID;
 
-        if (taskID.length === 0) res.sendStatus(400);
+        if (taskID.length === 0 || userID.length === 0) res.sendStatus(400);
         else
-            database.editTask(taskID, task).then(
+            database.editTask(taskID, userID, task).then(
                 () => {
                     res.sendStatus(200);
                 },
@@ -99,7 +98,7 @@ router
     })
     .delete((req, res) => {
         let userID = req.query.userID,
-            taskID = req.param.taskID;
+            taskID = req.params.taskID;
 
         if (taskID.length === 0 || userID.length === 0) res.sendStatus(400);
         else
