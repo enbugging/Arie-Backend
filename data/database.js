@@ -93,9 +93,7 @@ async function createTask(task) {
         name: task.name,
         creator: task.creator,
         description: task.description,
-        checkpoints: task.checkpoints.map(docs => {
-            new Checkpoints(docs);
-        }),
+        checkpoints: task.checkpoints.map(docs => new Checkpoints(docs)),
         createTime: Date.now(),
         startTime: task.startTime,
         endTime: task.endTime,
@@ -122,9 +120,9 @@ async function editTask(taskID, userID, task) {
                 {
                     name: task.name,
                     description: task.description,
-                    checkpoints: task.checkpoints.map(docs => {
-                        new Checkpoints(docs);
-                    }),
+                    checkpoints: task.checkpoints.map(
+                        docs => new Checkpoints(docs)
+                    ),
                     startTime: task.endTime,
                     endTime: task.endTime
                 }
