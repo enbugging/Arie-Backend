@@ -28,8 +28,8 @@ router
         count = Number(count);
         if (queryTask.name) searchTask.name = RegExp(queryTask.name);
         if (queryTask.creator) searchTask.creator = RegExp(queryTask.creator);
-        if (queryTask.city) searchTask.city = RegExp(queryTask.city);
-        if (queryTask.country) searchTask.country = RegExp(queryTask.country);
+        if (queryTask.checkpoints)
+            searchTask.checkpoints = RegExp(queryTask.checkpoints);
         if (queryTask.startTime)
             searchTask.startTime = RegExp(queryTask.startTime);
         if (queryTask.endTime) searchTask.endTime = RegExp(queryTask.endTime);
@@ -80,13 +80,21 @@ router
         }
     })
     .patch(bodyParser.json(), (req, res) => {
-        let task = req.body,
+        let queryTask = req.body,
+            updateTask = {},
             taskID = req.params.taskID,
             userID = req.query.userID;
 
+        if (queryTask.name) updateTask.name = queryTask.name;
+        if (queryTask.description) updateTask.description = queryTask.description;
+        if (queryTask.checkpoints)
+            updateTask.checkpoints = queryTask.checkpoints;
+        if (queryTask.startTime) updateTask.startTime = queryTask.startTime;
+        if (queryTask.endTime) updateTask.endTime = queryTask.endTime;
+
         if (taskID.length === 0 || userID.length === 0) res.sendStatus(400);
         else
-            database.editTask(taskID, userID, task).then(
+            database.editTask(taskID, userID, updateTask).then(
                 () => {
                     res.sendStatus(200);
                 },

@@ -4,11 +4,32 @@ const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
 /**
+ * Definitinon of a Checkpoint
+ * @param {String} title : name of the checkpoint
+ * @param {String} description : description of the checkpoint
+ * @param {String} lable : the Hash code of the lable being compared
+ * @param {String} type : type of the lable
+ * @param {Number} longitude : longitutde of the checkpoint
+ * @param {Number} latitude : latitude of the checkpoint
+ */
+
+var checkpoint = new Object({
+    title: String,
+    description: String,
+    lable: String,
+    type: String,
+    latitude: Number,
+    longitude: Number
+});
+
+var Checkpoints = mongoose.model("Checkpoints", checkpoint);
+
+/**
  * Definition of a Task
  * @param {String} name : name of the task
  * @param {String} creator : ID of the creator
  * @param {String} description : description of the task
- * @param {Array} places : tasks' description and places where the task will take place
+ * @param {Array} checkpoints : checkpoints where the task will take place
  * @param {Date} createTime : timestamp of task's creation
  * @param {Date} startTime : when the task will begin
  * @param {Date} endTime : when the task will end
@@ -18,7 +39,7 @@ var task = new Schema({
     name: String,
     creator: String,
     description: String,
-    places: Array,
+    checkpoints: [checkpoint],
     createTime: Date,
     startTime: Date,
     endTime: Date,
@@ -72,7 +93,9 @@ async function createTask(task) {
         name: task.name,
         creator: task.creator,
         description: task.description,
-        places: task.places,
+        checkpoints: task.checkpoints.map(docs => {
+            new Checkpoints(docs);
+        }),
         createTime: Date.now(),
         startTime: task.startTime,
         endTime: task.endTime,
@@ -99,13 +122,14 @@ async function editTask(taskID, userID, task) {
                 {
                     name: task.name,
                     description: task.description,
-                    places: task.places,
+                    checkpoints: task.checkpoints.map(docs => {
+                        new Checkpoints(docs);
+                    }),
                     startTime: task.endTime,
                     endTime: task.endTime
                 }
             );
-        }
-        else throw new Error("Unauthorized attempt to edit tasks!");
+        } else throw new Error("Unauthorized attempt to edit tasks!");
     } catch (err) {
         throw err;
     }
@@ -120,7 +144,7 @@ async function deleteTask(taskID, userID) {
     let res;
     try {
         res = await Tasks.findById(taskID);
-        if(res.creator === userID) await Tasks.deleteOne({ _id: taskID });
+        if (res.creator === userID) await Tasks.deleteOne({ _id: taskID });
         else throw new Error("Unauthorized attempt to delete tasks!");
     } catch (err) {
         throw err;
@@ -156,6 +180,7 @@ async function subscribe(taskID, userID) {
 }
 
 module.exports = {
+    Checkpoints,
     Tasks,
     readAllTasks,
     readOneTask,
