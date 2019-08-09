@@ -1,3 +1,6 @@
+require("dotenv").config(
+    process.env.NODE_ENV === "test" ? { path: "./.env.test" } : {}
+);
 const http = require("http"),
     express = require("express"),
     morgan = require("morgan"),
@@ -15,7 +18,7 @@ app.set("view engine", "jade");
 var serv = http.createServer(app);
 
 app.on("ready", function() {
-    const PORT = 3000;
+    const PORT = process.env.PORT || 3000;
 
     // main part
     serv = app
@@ -33,13 +36,7 @@ app.on("ready", function() {
         });
 });
 
-const environment = process.env.NODE_ENV,
-    databaseIP =
-        environment === "test"
-            ? "mongodb://localhost/sample_database"
-            : "mongodb://localhost/test";
-
-mongoose.connect(databaseIP, { useNewUrlParser: true });
+mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true });
 const db = mongoose.connection;
 db.on("error", console.error.bind(console, "connection error:"));
 db.once("open", function() {

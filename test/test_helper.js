@@ -14,7 +14,7 @@ after(function(done) {
         console.log("Database disconnected!");
         serv.close(() => {
             console.log(
-                "Arie-chan is closed, but she'll still around. Watashi o chekku shite kurete arigatou~"
+                "Arie-chan is closed, but she'll still be around. Watashi o chekku shite kurete arigatou~"
             );
             done();
         });
