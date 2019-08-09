@@ -19,7 +19,7 @@ describe("Creating new tasks", () => {
         });
 
         request
-            .post("/api/tasks")
+            .post(`/api/tasks`)
             .send(task)
             .expect(200, function(err) {
                 done(err);

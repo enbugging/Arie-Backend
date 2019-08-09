@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node .",
-    "test": "set NODE_ENV=test&& mocha -R min --recursive --exit"
+    "test": "set NODE_ENV=test&& mocha --recursive --exit"
   },
   "author": "Nguyen Doan Dai",
   "license": "MIT",

@@ -7,7 +7,7 @@ require("./update_test.js");
 
 describe("Deleting tasks", () => {
     before(function(done) {
-        request.get("/api/tasks?idx=0&count=1").expect(200, function(err, res) {
+        request.get(`/api/tasks?idx=0&count=1`).expect(200, function(err, res) {
             if (err) done(err);
             else {
                 task = new database.Tasks(...res.body);
@@ -18,7 +18,7 @@ describe("Deleting tasks", () => {
 
     it("deletes a non-existent task", function(done) {
         request
-            .delete("/api/tasks/abcdef" + "?userID=Megumi%20Tadokoro")
+            .delete(`/api/tasks/abcdef?userID=Megumi%20Tadokoro`)
             .expect(400, function(err) {
                 if (err) done(err);
                 else done();
@@ -27,7 +27,7 @@ describe("Deleting tasks", () => {
 
     it("unauthoriziedly attempts to delete a task", function(done) {
         request
-            .delete("/api/tasks/" + task._id + "?userID=megumitadokoro")
+            .delete(`/api/tasks/${task._id}?userID=megumitadokoro`)
             .expect(400, function(err) {
                 if (err) done(err);
                 else done();
@@ -36,7 +36,7 @@ describe("Deleting tasks", () => {
 
     it("delete a task", function(done) {
         request
-            .delete("/api/tasks/" + task._id + "?userID=Megumi%20Tadokoro")
+            .delete(`/api/tasks/${task._id}?userID=Megumi%20Tadokoro`)
             .expect(200, function(err) {
                 if (err) done(err);
                 else done();
