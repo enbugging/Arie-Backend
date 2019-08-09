@@ -1,5 +1,6 @@
-# Arie-Backend
-API being specifically build for Arie application
+# Arie's Backend
+This is API and Database infrastructure being specifically build for Arie application - team Kori's project in e-ICON World Contest 2019. The name of the team and the application were derived from using Google translate to translate "Arie" and "Kori" as "there" and "here", which came from abbreviating "ARtIficial Eye" and merging "Korea - Vietnam" into one word before pronouncing it in Japanese way.
+
 <b> API Guide </b>
  * Routes in this API, by order (also the order of test cases)
  * POST tasks : create new task
