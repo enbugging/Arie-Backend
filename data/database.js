@@ -13,7 +13,7 @@ const Schema = mongoose.Schema;
  * @param {Number} latitude : latitude of the checkpoint
  */
 
-var checkpoint = new Object({
+var checkpoint = new Schema({
     title: String,
     description: String,
     lable: String,
@@ -93,7 +93,7 @@ async function createTask(task) {
         name: task.name,
         creator: task.creator,
         description: task.description,
-        checkpoints: task.checkpoints.map(docs => new Checkpoints(docs)),
+        checkpoints: task.checkpoints.map(doc => new Checkpoints(doc)),
         createTime: Date.now(),
         startTime: task.startTime,
         endTime: task.endTime,
@@ -121,7 +121,7 @@ async function editTask(taskID, userID, task) {
                     name: task.name,
                     description: task.description,
                     checkpoints: task.checkpoints.map(
-                        docs => new Checkpoints(docs)
+                        doc => new Checkpoints(doc)
                     ),
                     startTime: task.endTime,
                     endTime: task.endTime
