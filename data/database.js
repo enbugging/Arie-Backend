@@ -7,8 +7,8 @@ const Schema = mongoose.Schema;
  * Definitinon of a Checkpoint
  * @param {String} title : name of the checkpoint
  * @param {String} description : description of the checkpoint
- * @param {String} lable : the Hash code of the lable being compared
- * @param {String} type : type of the lable
+ * @param {String} label : the Hash code of the label being compared
+ * @param {String} type : type of the label
  * @param {Number} longitude : longitutde of the checkpoint
  * @param {Number} latitude : latitude of the checkpoint
  */
@@ -16,7 +16,7 @@ const Schema = mongoose.Schema;
 var checkpoint = new Schema({
     title: String,
     description: String,
-    lable: String,
+    label: String,
     type: String,
     latitude: Number,
     longitude: Number

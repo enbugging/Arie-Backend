@@ -7,7 +7,7 @@ describe("Creating new tasks", () => {
         const checkpoint = {
             title: "First checkpoint",
             description: "Testing",
-            lable: "abcdef",
+            label: "abcdef",
             type: "test",
             latitude: 20.991732,
             longitude: 105.796381
