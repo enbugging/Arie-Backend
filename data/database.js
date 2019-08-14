@@ -89,20 +89,44 @@ async function readOneTask(taskID) {
  * @param {Task} task : new task being added to the database
  */
 async function createTask(task) {
-    var newTask = new Tasks({
-        name: task.name,
-        creator: task.creator,
-        description: task.description,
-        checkpoints: task.checkpoints.map(doc => new Checkpoints(doc)),
-        createTime: Date.now(),
-        startTime: task.startTime,
-        endTime: task.endTime,
-        participantIDs: new Array()
-    });
+    try {
+        let start = new Date(task.startTime),
+            end = new Date(task.endTime),
+            now = Date.now();
 
-    newTask.save(function(err) {
-        if (err) throw err;
-    });
+        if (start.getTime() > end.getTime())
+            throw new Error("Invalid start/end time");
+        else if (now > end.getTime())
+            throw new Error("Cannot create a task having ended");
+        else if (now > start.getTime())
+            throw new Error("Cannot create a task having began");
+
+        for (let i = 0; i < task.checkpoints.length; i++) {
+            let lat = task.checkpoints[i].latitude,
+                lon = task.checkpoints[i].longitude;
+            if (-90 > lat || lat > 90 || -180 > lon || lon > 180)
+                throw new Error(
+                    `Invalid coordinate(s) of the checkpoint numbered ${i + 1}`
+                );
+        }
+
+        var newTask = new Tasks({
+            name: task.name,
+            creator: task.creator,
+            description: task.description,
+            checkpoints: task.checkpoints.map(doc => new Checkpoints(doc)),
+            createTime: now,
+            startTime: start,
+            endTime: end,
+            participantIDs: new Array()
+        });
+
+        newTask.save(function(err) {
+            if (err) throw err;
+        });
+    } catch (err) {
+        throw err;
+    }
 }
 
 /**
@@ -113,8 +137,44 @@ async function createTask(task) {
 async function editTask(taskID, userID, task) {
     let res;
     try {
+        let start = new Date(task.startTime),
+            end = new Date(task.endTime),
+            now = Date.now();
+
+        for (let i = 0; i < task.checkpoints.length; i++) {
+            let lat = task.checkpoints[i].latitude,
+                lon = task.checkpoints[i].longitude;
+            if (-90 > lat || lat > 90 || -180 > lon || lon > 180)
+                throw new Error(
+                    `Invalid coordinate(s) of the checkpoint numbered ${i + 1}`
+                );
+        }
+
         res = await Tasks.findById(taskID);
+
         if (res.creator === userID) {
+            let oldStart = new Date(res.startTime).getTime(),
+                oldEnd = new Date(res.endTime).getTime();
+            if (oldStart > now) {
+                if (start.getTime() > end.getTime())
+                    throw new Error("Invalid start/end time");
+                if (start.getTime() < now)
+                    throw new Error(
+                        "Cannot edit a task to start it before present"
+                    );
+            } else if (now > oldEnd)
+                throw new Error("Cannot edit a task having ended");
+            else {
+                if (oldStart !== start.getTime())
+                    throw new Error(
+                        "Cannot edit the start time of a task having started earlier"
+                    );
+                else if (oldEnd > end.getTime())
+                    throw new Error(
+                        "Cannont edit the end time of a task to end it sooner than initial setup"
+                    );
+            }
+
             await Tasks.updateOne(
                 { _id: taskID },
                 {
@@ -123,8 +183,8 @@ async function editTask(taskID, userID, task) {
                     checkpoints: task.checkpoints.map(
                         doc => new Checkpoints(doc)
                     ),
-                    startTime: task.endTime,
-                    endTime: task.endTime
+                    startTime: start,
+                    endTime: end
                 }
             );
         } else throw new Error("Unauthorized attempt to edit tasks!");
