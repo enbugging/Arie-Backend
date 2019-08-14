@@ -5,8 +5,9 @@
  * (including custom parameters to search)
  * GET tasks/:taskID : retrieve details of a particular task
  * PATCH tasks/:taskID?userID= : edit existing task
- * POST tasks/:taskID?userID= : subscribe to a task
  * DELETE tasks/:taskID?userID= : delete existing task
+ * POST tasks/:taskID?userID= : subscribe to a task
+ * DELETE tasks/unsubscribe/:taskID?userID= : unsubscribe to a task
  */
 
 "use strict";
@@ -86,7 +87,8 @@ router
             userID = req.query.userID;
 
         if (queryTask.name) updateTask.name = queryTask.name;
-        if (queryTask.description) updateTask.description = queryTask.description;
+        if (queryTask.description)
+            updateTask.description = queryTask.description;
         if (queryTask.checkpoints)
             updateTask.checkpoints = queryTask.checkpoints;
         if (queryTask.startTime) updateTask.startTime = queryTask.startTime;
@@ -136,5 +138,22 @@ router
                 }
             );
     });
+
+router.route("/unsubscribe/:taskID").delete((req, res) => {
+    let userID = req.query.userID,
+        taskID = req.params.taskID;
+
+    if (taskID.length === 0 || userID.length === 0) res.sendStatus(400);
+    else
+        database.unsubscribe(taskID, userID).then(
+            () => {
+                res.sendStatus(200);
+            },
+            err => {
+                console.log(err.message);
+                res.sendStatus(400);
+            }
+        );
+});
 
 module.exports = router;

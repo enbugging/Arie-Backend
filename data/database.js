@@ -33,7 +33,7 @@ var Checkpoints = mongoose.model("Checkpoints", checkpoint);
  * @param {Date} createTime : timestamp of task's creation
  * @param {Date} startTime : when the task will begin
  * @param {Date} endTime : when the task will end
- * @param {Array} participantIDs : the list of participants' ID
+ * @param {Set} participantIDs : the list of participants' ID
  */
 var task = new Schema({
     name: String,
@@ -43,7 +43,7 @@ var task = new Schema({
     createTime: Date,
     startTime: Date,
     endTime: Date,
-    participantIDs: Array
+    participantIDs: Map
 });
 
 var Tasks = mongoose.model("Tasks", task);
@@ -118,7 +118,7 @@ async function createTask(task) {
             createTime: now,
             startTime: start,
             endTime: end,
-            participantIDs: new Array()
+            participantIDs: new Map()
         });
 
         newTask.save(function(err) {
@@ -225,7 +225,35 @@ async function subscribe(taskID, userID) {
                 res.status(400).json(err.message);
             }
         );
-        participants.push(userID);
+        participants.set(userID, userID);
+        await Tasks.updateOne(
+            { _id: taskID },
+            {
+                participantIDs: participants
+            }
+        );
+    } catch (err) {
+        throw err;
+    }
+}
+
+/**
+ * Unsubscribe an user to a task
+ * @param {String} taskID : id of the task
+ * @param {String} userID : id of the participant
+ */
+async function unsubscribe(taskID, userID) {
+    let participants;
+    try {
+        await Tasks.findById(taskID, "participantIDs").then(
+            docs => {
+                participants = docs.participantIDs;
+            },
+            err => {
+                res.status(400).json(err.message);
+            }
+        );
+        participants.delete(userID);
         await Tasks.updateOne(
             { _id: taskID },
             {
@@ -245,5 +273,6 @@ module.exports = {
     createTask,
     editTask,
     deleteTask,
-    subscribe
+    subscribe,
+    unsubscribe
 };

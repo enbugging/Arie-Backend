@@ -83,4 +83,13 @@ describe("Updating tasks", () => {
                 else done();
             });
     });
+
+    it("unsubscribes to a task", function(done) {
+        request
+            .delete(`/api/tasks/unsubscribe/${task._id}?userID=megumitadokoro`)
+            .expect(200, function(err) {
+                if (err) done(err);
+                else done();
+            });
+    });
 });
