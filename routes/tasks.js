@@ -27,7 +27,7 @@ router
 
         idx = Number(idx);
         count = Number(count);
-        if (queryTask.name) searchTask.name = RegExp(queryTask.name);
+        if (queryTask.name) searchTask.name = RegExp(queryTask.name, "i");
         if (queryTask.creator) searchTask.creator = RegExp(queryTask.creator);
         if (queryTask.checkpoints)
             searchTask.checkpoints = RegExp(queryTask.checkpoints);

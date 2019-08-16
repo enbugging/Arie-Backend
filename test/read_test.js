@@ -19,7 +19,7 @@ describe("Reading tasks", () => {
 
     it("finds a task with query", done => {
         const query = {
-            name : "a"
+            name : "test task"
         };
         encodedQuery = encodeURIComponent(JSON.stringify(query));
         request.get(`/api/tasks?idx=0&count=1&q=${encodedQuery}`).expect(200, function(err) {
