@@ -3,6 +3,7 @@
  * POST tasks : create new task
  * GET tasks/?idx= & count= : retrieve general info of number of tasks
  * (including custom parameters to search)
+ * GET tasks/trending : retrieve top 5 trending tasks (or all tasks if there're less than 5)
  * GET tasks/:taskID : retrieve details of a particular task
  * PATCH tasks/:taskID?userID= : edit existing task
  * DELETE tasks/:taskID?userID= : delete existing task
@@ -60,6 +61,18 @@ router
             }
         );
     });
+
+router.route("/trending").get((req, res) => {
+    database.readTrendings().then(
+        docs => {
+            res.status(200).send(docs);
+        },
+        err => {
+            console.log(err.message);
+            res.sendStatus(400);
+        }
+    );
+});
 
 // Get exact task by ID
 router

@@ -7,7 +7,7 @@ var task;
 require("./create_test.js");
 
 describe("Reading tasks", () => {
-    it("reads all tasks", done => {
+    it("read all tasks", done => {
         request.get(`/api/tasks?idx=0&count=1`).expect(200, function(err, res) {
             if (err) done(err);
             else {
@@ -17,7 +17,7 @@ describe("Reading tasks", () => {
         });
     });
 
-    it("finds a task with query", done => {
+    it("find a task with query", done => {
         const query = {
             name : "test task"
         };
@@ -27,14 +27,14 @@ describe("Reading tasks", () => {
         });
     });
 
-    it("reads a non-existent task", done => {
+    it("read a non-existent task", done => {
         request.get(`/api/tasks/abcdef`).expect(400, function(err, res) {
             if (err) done(err);
             else done();
         });
     });
 
-    it("reads a specific task", done => {
+    it("read a specific task", done => {
         request.get(`/api/tasks/${task._id}`).expect(200, function(err, res) {
             if (err) done(err);
             else done();

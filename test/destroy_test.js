@@ -16,7 +16,7 @@ describe("Deleting tasks", () => {
         });
     });
 
-    it("deletes a non-existent task", function(done) {
+    it("delete a non-existent task", function(done) {
         request
             .delete(`/api/tasks/abcdef?userID=Megumi%20Tadokoro`)
             .expect(400, function(err) {
@@ -25,7 +25,7 @@ describe("Deleting tasks", () => {
             });
     });
 
-    it("unauthoriziedly attempts to delete a task", function(done) {
+    it("unauthoriziedly attempt to delete a task", function(done) {
         request
             .delete(`/api/tasks/${task._id}?userID=megumitadokoro`)
             .expect(400, function(err) {

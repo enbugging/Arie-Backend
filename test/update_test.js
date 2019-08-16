@@ -27,7 +27,7 @@ describe("Updating tasks", () => {
             });
     });
 
-    it("updates a non-existent task", function(done) {
+    it("update a non-existent task", function(done) {
         request
             .patch(`/api/tasks/abcdef?userID=Megumi%20Tadokoro`)
             .send(task)
@@ -37,7 +37,7 @@ describe("Updating tasks", () => {
             });
     });
 
-    it("updates invalid start/end time", function(done) {
+    it("update invalid start/end time", function(done) {
         let newTask = lodash.cloneDeep(task),
             temp = newTask.startTime;
         newTask.startTime = newTask.endTime;
@@ -52,7 +52,7 @@ describe("Updating tasks", () => {
             });
     });
 
-    it("updates a task to force it begins before present", function(done) {
+    it("update a task to force it begins before present", function(done) {
         let newTask = lodash.cloneDeep(task);
         newTask.startTime = "2019-08-05T08:34:00+07:00";
 
@@ -65,7 +65,7 @@ describe("Updating tasks", () => {
             });
     });
 
-    it("updates a task", function(done) {
+    it("update a task", function(done) {
         request
             .patch(`/api/tasks/${task._id}?userID=Megumi%20Tadokoro`)
             .send(task)
@@ -75,7 +75,7 @@ describe("Updating tasks", () => {
             });
     });
 
-    it("subscribes to a task", function(done) {
+    it("subscribe to a task", function(done) {
         request
             .post(`/api/tasks/${task._id}?userID=megumitadokoro`)
             .expect(200, function(err) {
@@ -84,12 +84,19 @@ describe("Updating tasks", () => {
             });
     });
 
-    it("unsubscribes to a task", function(done) {
+    it("unsubscribe to a task", function(done) {
         request
             .delete(`/api/tasks/unsubscribe/${task._id}?userID=megumitadokoro`)
             .expect(200, function(err) {
                 if (err) done(err);
                 else done();
             });
+    });
+
+    it("read trending tasks", function(done) {
+        request.get(`/api/tasks/trending`).expect(200, function(err) {
+            if (err) done(err);
+            else done();
+        });
     });
 });

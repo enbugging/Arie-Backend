@@ -12,7 +12,7 @@ const checkpoint = {
 };
 
 describe("Creating new tasks", () => {
-    it("creates a new task with invalid coordinate(s)", done => {
+    it("create a new task with invalid coordinate(s)", done => {
         const task = new database.Tasks({
             name: "Test task",
             creator: "Megumi Tadokoro",
@@ -30,7 +30,7 @@ describe("Creating new tasks", () => {
             });
     });
 
-    it("creates a new task with invalid start/end time", done => {
+    it("create a new task with invalid start/end time", done => {
         const task = new database.Tasks({
             name: "Test task",
             creator: "Megumi Tadokoro",
@@ -48,7 +48,7 @@ describe("Creating new tasks", () => {
             });
     });
 
-    it("creates a new task having already began", done => {
+    it("create a new task having already began", done => {
         let now = new Date(Date.now());
         now.setFullYear(now.getFullYear() + 1);
 
@@ -69,7 +69,7 @@ describe("Creating new tasks", () => {
             });
     });
 
-    it("creates a new task having already ended", done => {
+    it("create a new task having already ended", done => {
         const task = new database.Tasks({
             name: "Test task",
             creator: "Megumi Tadokoro",
@@ -87,7 +87,7 @@ describe("Creating new tasks", () => {
             });
     });
 
-    it("creates a new task", done => {
+    it("create a new task", done => {
         let now = new Date(Date.now()), later = new Date(Date.now());
         now.setFullYear(now.getFullYear() + 1);
         later.setFullYear(later.getFullYear() + 1);

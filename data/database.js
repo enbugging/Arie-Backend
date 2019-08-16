@@ -2,6 +2,7 @@
 // template part
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
+const Big = require("big.js");
 
 /**
  * Definitinon of a Checkpoint
@@ -33,7 +34,7 @@ var Checkpoints = mongoose.model("Checkpoints", checkpoint);
  * @param {Date} createTime : timestamp of task's creation
  * @param {Date} startTime : when the task will begin
  * @param {Date} endTime : when the task will end
- * @param {Set} participantIDs : the list of participants' ID
+ * @param {Map} participantIDs : the list of participants' ID
  */
 var task = new Schema({
     name: String,
@@ -47,6 +48,18 @@ var task = new Schema({
 });
 
 var Tasks = mongoose.model("Tasks", task);
+
+/**
+ * A data structure to update and retrieve trending tasks
+ * from continuous data stream
+ * @param {Number} alp : the time decaying factor (0 < alp < 1)
+ * @param {Number} MAX_TREND : the number of counters
+ */
+const alp = new Big(0.989),
+    MAX_TREND = 5;
+var Trend = new Map(),
+    last = new Date("2001-07-08T09:00:00+0700").getTime(),
+    lastStep = 0;
 
 /**
  * Get the general information of 'count' tasks from IDX-th task
@@ -66,6 +79,12 @@ async function readAllTasks(IDX, count, task) {
         throw err;
     }
 
+    return res;
+}
+
+async function readTrendings() {
+    let res = new Array(Trend);
+    if (res.length === 0) readAllTasks(0, k, {});
     return res;
 }
 
@@ -194,18 +213,56 @@ async function editTask(taskID, userID, task) {
 }
 
 /**
- * Delete an existing task
- * @param {String} taskID
- * @param {String} userID
+ * Update trending score of a task
+ * Side note: The algorithm was retrieved as Algorithm 2 from
+ * Lim, Yongsub & Kang, U. (2017).
+ * "Time-weighted counting for recently frequent pattern
+ * mining in data streams. Knowledge and Information Systems".
+ * p. 11, 53. 10.1007/s10115-017-1045-1.
+ * (https://yongsub.me/resources/papers/kais17.pdf)
+ * @param {String} taskID : id of the task
  */
-async function deleteTask(taskID, userID) {
-    let res;
-    try {
-        res = await Tasks.findById(taskID);
-        if (res.creator === userID) await Tasks.deleteOne({ _id: taskID });
-        else throw new Error("Unauthorized attempt to delete tasks!");
-    } catch (err) {
-        throw err;
+function updateTrend(taskID) {
+    let cur = Date.now(),
+        delta = cur - last;
+    delta = delta / 1000; // convert to seconds
+    delta = delta / 20; // convert to time step of 20s
+    delta = Math.ceil(delta); // round up
+
+    // update tasks in Trend
+    if (delta > 4320 + lastStep)
+        // being out of 24-hour window, which is too small to be worth considering
+        // 0.989^4320 ~ 1.75e-21
+        Trend.forEach((value, key) => {
+            Trend.set(key, new Big(0));
+        });
+    else if (delta > lastStep) {
+        // different window that the last one, making it necessary to multiply the time decaying factor
+        let decay = new Big(alp).pow(delta);
+        Trend.forEach((value, key) => {
+            Trend.set(key, value.times(decay));
+        });
+    }
+
+    // update time counter
+    last = cur;
+    lastStep = delta;
+
+    // update Trend
+    if (Trend.has(taskID)) Trend.set(taskID, Trend.get(taskID) + 1);
+    else if (Trend.size < MAX_TREND) Trend.set(taskID, 1);
+    else {
+        let outdateTask_Counter = new Big(-1),
+            outdateTask_id;
+        Trend.forEach((value, key) => {
+            if (outdateTask_Counter.eq(-1) || outdateTask_Counter.lt(value))
+                (outdateTask_id = key), (outdateTask_Counter = value);
+        });
+
+        if (outdateTask_Counter.lt(1)) {
+            Trend.delete(outdateTask_id);
+            Trend.set(taskID, 1);
+        }
     }
 }
 
@@ -225,7 +282,8 @@ async function subscribe(taskID, userID) {
                 res.status(400).json(err.message);
             }
         );
-        participants.set(userID, userID);
+        if (participants.has(userID)) updateTrend(taskID);
+        else participants.set(userID, userID);
         await Tasks.updateOne(
             { _id: taskID },
             {
@@ -265,10 +323,27 @@ async function unsubscribe(taskID, userID) {
     }
 }
 
+/**
+ * Delete an existing task
+ * @param {String} taskID
+ * @param {String} userID
+ */
+async function deleteTask(taskID, userID) {
+    let res;
+    try {
+        res = await Tasks.findById(taskID);
+        if (res.creator === userID) await Tasks.deleteOne({ _id: taskID });
+        else throw new Error("Unauthorized attempt to delete tasks!");
+    } catch (err) {
+        throw err;
+    }
+}
+
 module.exports = {
     Checkpoints,
     Tasks,
     readAllTasks,
+    readTrendings,
     readOneTask,
     createTask,
     editTask,
