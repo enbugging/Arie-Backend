@@ -83,8 +83,9 @@ async function readAllTasks(IDX, count, task) {
 }
 
 async function readTrendings() {
-    let res = new Array(Trend);
+    let res = new Array(...Trend.keys());
     if (res.length === 0) await readAllTasks(0, MAX_TREND, {});
+    console.log(res);
     return res;
 }
 
@@ -282,8 +283,10 @@ async function subscribe(taskID, userID) {
                 res.status(400).json(err.message);
             }
         );
-        if (participants.has(userID)) updateTrend(taskID);
-        else participants.set(userID, userID);
+        if (!participants.has(userID)) {
+            updateTrend(taskID);
+            participants.set(userID, userID);
+        }
         await Tasks.updateOne(
             { _id: taskID },
             {
