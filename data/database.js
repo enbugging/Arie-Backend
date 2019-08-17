@@ -237,7 +237,7 @@ function updateTrend(taskID) {
             Trend.set(key, new Big(0));
         });
     else if (delta > lastStep) {
-        // different window that the last one, making it necessary to multiply the time decaying factor
+        // different window than the last one, making it necessary to multiply the time decaying factor
         let decay = new Big(alp).pow(delta);
         Trend.forEach((value, key) => {
             Trend.set(key, value.times(decay));
@@ -255,7 +255,7 @@ function updateTrend(taskID) {
         let outdateTask_Counter = new Big(-1),
             outdateTask_id;
         Trend.forEach((value, key) => {
-            if (outdateTask_Counter.eq(-1) || outdateTask_Counter.lt(value))
+            if (outdateTask_Counter.eq(-1) || outdateTask_Counter.gt(value))
                 (outdateTask_id = key), (outdateTask_Counter = value);
         });
 
