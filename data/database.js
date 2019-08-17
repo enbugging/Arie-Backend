@@ -84,7 +84,7 @@ async function readAllTasks(IDX, count, task) {
 
 async function readTrendings() {
     let res = new Array(Trend);
-    if (res.length === 0) readAllTasks(0, k, {});
+    if (res.length === 0) await readAllTasks(0, k, {});
     return res;
 }
 
