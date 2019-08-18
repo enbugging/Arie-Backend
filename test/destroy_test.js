@@ -1,5 +1,6 @@
 const { request } = require("./test_helper.js"),
-    database = require("../data/database.js");
+    database = require("../data/database.js"),
+    { user } = require("../test/create_test.js");
 
 var task;
 
@@ -18,7 +19,7 @@ describe("Deleting tasks", () => {
 
     it("delete a non-existent task", function(done) {
         request
-            .delete(`/api/tasks/abcdef?userID=Megumi%20Tadokoro`)
+            .delete(`/api/tasks/abcdef?userID=${user._id}`)
             .expect(400, function(err) {
                 if (err) done(err);
                 else done();
@@ -36,7 +37,7 @@ describe("Deleting tasks", () => {
 
     it("delete a task", function(done) {
         request
-            .delete(`/api/tasks/${task._id}?userID=Megumi%20Tadokoro`)
+            .delete(`/api/tasks/${task._id}?userID=${user._id}`)
             .expect(200, function(err) {
                 if (err) done(err);
                 else done();

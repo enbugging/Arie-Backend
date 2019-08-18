@@ -2,6 +2,11 @@
 const database = require("../data/database.js"),
     { request } = require("./test_helper.js");
 
+const user = new database.Users({
+    name: "Megumi Tadokoro",
+    gmailAddress: "abc.def@gmail.com"
+});
+
 const checkpoint = {
     title: "First checkpoint",
     description: "Testing",
@@ -12,14 +17,59 @@ const checkpoint = {
 };
 
 describe("Creating new tasks", () => {
-    it("create a new task with invalid coordinate(s)", done => {
+    before(function(done) {
+        user.save(function(err) {
+            if (err) throw err;
+        });
+        done();
+    });
+    it("create a task with non-existent creator", done => {
+        let now = new Date(Date.now()),
+            later = new Date(Date.now());
+        now.setFullYear(now.getFullYear() + 1);
+        later.setFullYear(later.getFullYear() + 1);
+        later.setMonth(later.getMonth() + 1);
+
         const task = new database.Tasks({
             name: "Test task",
-            creator: "Megumi Tadokoro",
+            creator: "Megumi Tadokor",
             description: "This is a testing task",
             checkpoints: [checkpoint],
-            startTime: "2019-08-05T08:34:00+07:00",
-            endTime: "2019-08-12T08:34:00+07:00"
+            startTime: now.toString(),
+            endTime: later.toString()
+        });
+
+        request
+            .post(`/api/tasks`)
+            .send(task)
+            .expect(400, function(err) {
+                done(err);
+            });
+    });
+
+    it("create a new task with invalid coordinate(s)", done => {
+        let now = new Date(Date.now()),
+            later = new Date(Date.now());
+        now.setFullYear(now.getFullYear() + 1);
+        later.setFullYear(later.getFullYear() + 1);
+        later.setMonth(later.getMonth() + 1);
+
+        const false_checkpoint = {
+            title: "First checkpoint",
+            description: "Testing",
+            label: "abcdef",
+            type: "test",
+            latitude: 20.991732,
+            longitude: 185.796381
+        };
+
+        const task = new database.Tasks({
+            name: "Test task",
+            creator: user._id,
+            description: "This is a testing task",
+            checkpoints: [false_checkpoint],
+            startTime: now.toString(),
+            endTime: later.toString()
         });
 
         request
@@ -33,7 +83,7 @@ describe("Creating new tasks", () => {
     it("create a new task with invalid start/end time", done => {
         const task = new database.Tasks({
             name: "Test task",
-            creator: "Megumi Tadokoro",
+            creator: user._id,
             description: "This is a testing task",
             checkpoints: [checkpoint],
             startTime: "2019-08-12T08:34:00+07:00",
@@ -54,7 +104,7 @@ describe("Creating new tasks", () => {
 
         const task = new database.Tasks({
             name: "Test task",
-            creator: "Megumi Tadokoro",
+            creator: user._id,
             description: "This is a testing task",
             checkpoints: [checkpoint],
             startTime: "2019-08-05T08:34:00+07:00",
@@ -72,7 +122,7 @@ describe("Creating new tasks", () => {
     it("create a new task having already ended", done => {
         const task = new database.Tasks({
             name: "Test task",
-            creator: "Megumi Tadokoro",
+            creator: user._id,
             description: "This is a testing task",
             checkpoints: [checkpoint],
             startTime: "2019-08-05T08:34:00+07:00",
@@ -88,14 +138,15 @@ describe("Creating new tasks", () => {
     });
 
     it("create a new task", done => {
-        let now = new Date(Date.now()), later = new Date(Date.now());
+        let now = new Date(Date.now()),
+            later = new Date(Date.now());
         now.setFullYear(now.getFullYear() + 1);
         later.setFullYear(later.getFullYear() + 1);
         later.setMonth(later.getMonth() + 1);
 
         const task = new database.Tasks({
             name: "Test task",
-            creator: "Megumi Tadokoro",
+            creator: user._id,
             description: "This is a testing task",
             checkpoints: [checkpoint],
             startTime: now.toString(),
@@ -110,3 +161,5 @@ describe("Creating new tasks", () => {
             });
     });
 });
+
+module.exports = { user };

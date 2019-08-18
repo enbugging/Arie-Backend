@@ -1,5 +1,11 @@
 /**
- * Routes in this API, by order (also the order of test cases)
+ * Routes in this API, by order
+ * - API for users
+ * GET tasks/user/:userId : retrieve data of an user
+ * POST tasks/user : login to database
+ * PATCH tasks/user/:userID : update results
+ *
+ * - API for tasks
  * POST tasks : create new task
  * GET tasks/?idx= & count= : retrieve general info of number of tasks
  * (including custom parameters to search)
@@ -19,6 +25,57 @@ const express = require("express"),
 
 const router = express.Router();
 
+// API for users
+
+router
+    .route("/user")
+    .get((req, res) => {
+        let userID = req.query.userID;
+
+        if (userID.length === 0) res.sendStatus(400);
+        else {
+            database.fetchResults(userID).then(
+                docs => {
+                    res.status(200).send(docs);
+                },
+                err => {
+                    console.log(err.message);
+                    res.sendStatus(400);
+                }
+            );
+        }
+    })
+    .post(bodyParser.json(),  (req, res) => {
+        let user = req.body;
+        console.log(user);
+        database.login(user).then(
+            () => {
+                res.sendStatus(200);
+            },
+            err => {
+                console.log(err.message);
+                res.sendStatus(400);
+            }
+        );
+    })
+    .patch(bodyParser.json(), (req, res) => {
+        let userID = req.query.userID,
+            results = body;
+
+        if (userID.length === 0) res.sendStatus(400);
+        else
+            database.updateResults(userID, results).then(
+                () => {
+                    res.sendStatus(200);
+                },
+                err => {
+                    console.log(err.message);
+                    res.sendStatus(400);
+                }
+            );
+    });
+
+// API for tasks
 router
     .route("/")
     .get((req, res) => {

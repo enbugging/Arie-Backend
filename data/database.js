@@ -1,8 +1,9 @@
 "use strict";
 // template part
-const mongoose = require("mongoose");
-const Schema = mongoose.Schema;
-const Big = require("big.js");
+const mongoose = require("mongoose"),
+    Schema = mongoose.Schema,
+    Big = require("big.js"),
+    fetch = require("node-fetch");
 
 /**
  * Definitinon of a Checkpoint
@@ -50,6 +51,23 @@ var task = new Schema({
 var Tasks = mongoose.model("Tasks", task);
 
 /**
+ * Definition of an user
+ * @param {String} name : name of user
+ * @param {String} gmailAddress : Gmail address of user
+ * @param {Map} results : a map contains many small maps, each map corresponds with id of a task
+ * storing id of finished checkpoints
+ * @param {Map} sessions : a map contains existing sessions
+ */
+var user = new Schema({
+    name: String,
+    gmailAddress: String,
+    results: Map, 
+    sessions : Map
+});
+
+var Users = mongoose.model("Users", user);
+
+/**
  * A data structure to update and retrieve trending tasks
  * from continuous data stream
  * @param {Number} alp : the time decaying factor (0 < alp < 1)
@@ -57,9 +75,101 @@ var Tasks = mongoose.model("Tasks", task);
  */
 const alp = new Big(0.989),
     MAX_TREND = 5;
-var Trend = new Map(),
-    last = new Date("2001-07-08T09:00:00+0700").getTime(),
-    lastStep = 0;
+var Trend = new Map(), // TODO : save into db
+    lastStep = 0, 
+    last = new Date("2001-07-08T09:00:00+0700").getTime();
+
+/**
+ * Login to database
+ * @param {Users} user
+ */
+async function login(user) {
+    let query;
+    try {
+        fetch(`https://www.googleapis.com/oauth2/v3/tokeninfo`, {
+            header: {
+                Authorization: user.accessToken
+            }
+        }).then(res => {
+            if (!res.ok) throw new Error("Non-existent Gmail account");
+        });
+
+        query = await Users.findOne({ gmailAddress: user.gmailAddress });
+        if (query) {
+            // existed user => update name if necessary
+            if (query.name !== user.name) {
+                // update name
+                Users.updateOne(
+                    { _id: query._id },
+                    {
+                        name: user.name
+                    }
+                );
+            }
+        } else {
+            // new user => create new one
+            var newUser = new Users({
+                name: user.name,
+                gmailAddress: user.gmailAddress,
+                results: new Map()
+            });
+
+            newUser.save(function(err) {
+                if (err) throw err;
+            });
+        }
+    } catch (err) {
+        throw err;
+    }
+}
+
+/**
+ * Save new results into database
+ * @param {String} userID
+ * @param {Map} newrResults
+ */
+async function updateResults(userID, newResults) {
+    let oldResults;
+    try {
+        // retrieve old results
+        await Users.findById(userID, "results").then(
+            docs => {
+                oldResults = docs.results;
+            },
+            err => {
+                res.status(400).json(err.message);
+            }
+        );
+
+        // update with new results
+        let combinedResults = new Map(newResults, oldResults);
+
+        // save into database
+        await Users.updateOne(
+            { _id: userId },
+            {
+                results: combinedResults
+            }
+        );
+    } catch (err) {
+        throw err;
+    }
+}
+
+/**
+ * Fetch data from database, using userID
+ * @param {String} userID
+ */
+async function fetchResults(userID) {
+    let query;
+    try {
+        query = await Users.findById(userID);
+    } catch (err) {
+        throw err;
+    }
+
+    return query;
+}
 
 /**
  * Get the general information of 'count' tasks from IDX-th task
@@ -112,7 +222,10 @@ async function createTask(task) {
     try {
         let start = new Date(task.startTime),
             end = new Date(task.endTime),
-            now = Date.now();
+            now = Date.now(),
+            creator = await Users.findById(task.creator);
+
+        if (!creator) throw new Error("Non-existent creator");
 
         if (start.getTime() > end.getTime())
             throw new Error("Invalid start/end time");
@@ -345,6 +458,10 @@ async function deleteTask(taskID, userID) {
 module.exports = {
     Checkpoints,
     Tasks,
+    Users,
+    login,
+    updateResults,
+    fetchResults,
     readAllTasks,
     readTrendings,
     readOneTask,
