@@ -10,15 +10,23 @@ before(function(done) {
 });
 
 after(function(done) {
-    db.close().then(() => {
-        console.log("Database disconnected!");
-        serv.close(() => {
-            console.log(
-                "Arie-chan is closed, but she'll still be around. Watashi o chekku shite kurete arigatou~"
-            );
-            done();
-        });
-    });
+    try {
+        db.dropDatabase()
+            .then(() => {
+                db.close();
+            })
+            .then(() => {
+                console.log("Database disconnected!");
+                serv.close(() => {
+                    console.log(
+                        "Arie-chan is closed, but she'll still be around. Watashi o chekku shite kurete arigatou~"
+                    );
+                    done();
+                });
+            });
+    } catch (err) {
+        if (err) done(err);
+    }
 });
 
 module.exports = { request };
