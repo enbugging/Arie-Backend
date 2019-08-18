@@ -1,7 +1,7 @@
 require("dotenv").config(
     process.env.NODE_ENV === "test" ? { path: "./.env.test" } : {}
 );
-const http = require("http"),
+const http = require("https"),
     express = require("express"),
     morgan = require("morgan"),
     mongoose = require("mongoose"),
