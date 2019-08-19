@@ -4,6 +4,7 @@
  * GET tasks/user/:userId : retrieve data of an user
  * POST tasks/user : login to database
  * PATCH tasks/user/:userID : update results
+ * DELETE tasks/user/:userId : logout from database
  *
  * - API for tasks
  * POST tasks : create new task
@@ -45,11 +46,11 @@ router
             );
         }
     })
-    .post(bodyParser.json(),  (req, res) => {
+    .post(bodyParser.json(), (req, res) => {
         let user = req.body;
-        console.log(user);
         database.login(user).then(
             () => {
+                req.session = user.accessToken;
                 res.sendStatus(200);
             },
             err => {
@@ -73,6 +74,15 @@ router
                     res.sendStatus(400);
                 }
             );
+    })
+    .delete(bodyParser.json(), (req, res) => {
+        let user = req.body;
+        req.session.destroy(function(err) {
+            if (err) {
+                console.log(err.message);
+                res.sendStatus(400);
+            } else res.sendStatus(200);
+        });
     });
 
 // API for tasks

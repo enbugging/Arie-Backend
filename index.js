@@ -5,7 +5,9 @@ const http = require("https"),
     express = require("express"),
     morgan = require("morgan"),
     mongoose = require("mongoose"),
-    path = require("path");
+    path = require("path"),
+    session = require("express-session"),
+    MongoDBStore = require("connect-mongodb-session")(session);
 
 const app = express();
 app.use(morgan("dev"));
@@ -16,6 +18,18 @@ app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "jade");
 
 var serv = http.createServer(app);
+
+var store = new MongoDBStore({
+    uri: process.env.MONGO_URI,
+    collection: process.env.NODE_ENV === "test" ? "sample_database" : "test"
+});
+
+app.use(session({
+    secret: "I love Mai Anh-senpai",
+    saveUninitialized: true,
+    resave: false,
+    store: store
+}));
 
 app.on("ready", function() {
     const PORT = process.env.PORT || 3000;
