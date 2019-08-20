@@ -96,23 +96,25 @@ async function login(user) {
     let query;
     try {
         console.log(user.accessToken);
-        await fetch(`https://www.googleapis.com/oauth2/v3/tokeninfo`, {
-            header: {
-                Authorization: "Bearer" + user.accessToken
+        let res = await fetch(
+            `https://www.googleapis.com/oauth2/v3/tokeninfo`,
+            {
+                header: {
+                    Authorization: "Bearer" + user.accessToken
+                }
             }
-        }).then(res => {
-            if (!res.ok) throw new Error("Non-existent user");
-        });
+        );
+        if (!res.ok) throw new Error("Non-existent user");
+        else query = await Users.findOne({ gmailAddress: res.email });
 
-        query = await Users.findOne({ gmailAddress: user.gmailAddress });
         if (query) {
             // existed user => update name if necessary
-            if (query.name !== user.name) {
+            if (query.name !== res.name) {
                 // update name
                 Users.updateOne(
                     { _id: query._id },
                     {
-                        name: user.name
+                        name: res.name
                     }
                 );
             }
@@ -122,7 +124,7 @@ async function login(user) {
         } else {
             // new user => create new one
             var newUser = new Users({
-                name: user.name,
+                name: res.name,
                 gmailAddress: user.gmailAddress,
                 results: new Map()
             });
