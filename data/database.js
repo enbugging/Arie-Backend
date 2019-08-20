@@ -95,13 +95,14 @@ var Trends = mongoose.model("Trends", trend);
 async function login(user) {
     let query;
     try {
-        fetch(`https://www.googleapis.com/oauth2/v3/tokeninfo`, {
+        console.log(user.accessToken);
+        await fetch(`https://www.googleapis.com/oauth2/v3/tokeninfo`, {
             header: {
-                Authorization: user.accessToken
+                Authorization: "Bearer" + user.accessToken
             }
         }).then(res => {
-            if (!res.ok) throw new Error("Non-existent Gmail account");
-        });
+            if(!res.ok) throw new Error("Non-existent user");
+        })
 
         query = await Users.findOne({ gmailAddress: user.gmailAddress });
         if (query) {

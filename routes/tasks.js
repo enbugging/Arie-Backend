@@ -35,7 +35,7 @@ router
         let user = req.body;
         database.login(user).then(
             () => {
-                req.session = user.accessToken;
+                req.session.token = user.accessToken;
                 res.sendStatus(200);
             },
             err => {
