@@ -30,6 +30,7 @@ var Checkpoints = mongoose.model("Checkpoints", checkpoint);
  * Definition of a Task
  * @param {String} name : name of the task
  * @param {String} creatorID : ID of the creator
+ * @param {String} creatorName : name of the creator 
  * @param {String} description : description of the task
  * @param {Array} checkpoints : checkpoints where the task will take place
  * @param {Date} createTime : timestamp of task's creation
@@ -103,27 +104,29 @@ async function login(user) {
         if (res.statusCode !== 200) throw new Error("Non-existent user");
         else {
             console.log("Verified user");
-            query = await Users.findOne({ gmailAddress: res.email });
+            query = await Users.findOne({ gmailAddress: res.body.email });
         }
+
+        let body = JSON.parse(res.body);
 
         if (query) {
             // existed user => update name if necessary
-            // if (query.name !== res.name) {
-            //     // update name
-            //     Users.updateOne(
-            //         { _id: query._id },
-            //         {
-            //             name: res.name
-            //         }
-            //     );
-            // }
+            if (query.name !== body.name) {
+                // update name
+                await Users.updateOne(
+                    { _id: query._id },
+                    {
+                        name: body.name
+                    }
+                );
+            }
 
             // return ID of user, being used as session cookie
             return query.id;
         } else {
             // new user => create new one
             var newUser = new Users({
-                name: res.name,
+                name: body.name,
                 gmailAddress: user.gmailAddress,
                 results: new Map()
             });
@@ -257,6 +260,7 @@ async function createTask(task) {
             creator = await Users.findById(task.creatorID);
 
         if (!creator) throw new Error("Non-existent creator");
+        else task.creatorName = creator.name;
 
         if (start.getTime() > end.getTime())
             throw new Error("Invalid start/end time");
@@ -274,7 +278,6 @@ async function createTask(task) {
                 );
         }
 
-        task.creatorName = await Users.findById(task.creatorID, "name");
         var newTask = new Tasks({
             name: task.name,
             creatorID: task.creatorID,
