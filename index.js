@@ -24,12 +24,18 @@ var store = new MongoDBStore({
     collection: process.env.NODE_ENV === "test" ? "sample_database" : "test"
 });
 
-app.use(session({
-    secret: "I love Mai Anh-senpai",
-    saveUninitialized: true,
-    resave: false,
-    store: store
-}));
+store.on("error", function(error) {
+    console.log(error);
+});
+
+app.use(
+    session({
+        secret: "I love Mai Anh-senpai",
+        saveUninitialized: true,
+        resave: false,
+        store: store
+    })
+);
 
 app.on("ready", function() {
     const PORT = process.env.PORT || 3000;

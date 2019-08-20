@@ -61,8 +61,8 @@ var Tasks = mongoose.model("Tasks", task);
 var user = new Schema({
     name: String,
     gmailAddress: String,
-    results: Map, 
-    sessions : Map
+    results: Map,
+    sessions: Map
 });
 
 var Users = mongoose.model("Users", user);
@@ -72,12 +72,20 @@ var Users = mongoose.model("Users", user);
  * from continuous data stream
  * @param {Number} alp : the time decaying factor (0 < alp < 1)
  * @param {Number} MAX_TREND : the number of counters
+ * @param {Map} Trend : the map containing trending tasks
+ * @param {Number} lastStep : basicially, last time step
+ * @param {Date} last : the last time the trend was updated
  */
 const alp = new Big(0.989),
     MAX_TREND = 5;
-var Trend = new Map(), // TODO : save into db
-    lastStep = 0, 
-    last = new Date("2001-07-08T09:00:00+0700").getTime();
+
+var trend = new Schema({
+    Trend: Map,
+    lastStep: Number,
+    last: Date
+});
+
+var Trends = mongoose.model("Trends", trend);
 
 /**
  * Login to database
@@ -193,10 +201,13 @@ async function readAllTasks(IDX, count, task) {
 }
 
 async function readTrendings() {
-    let res = new Array(...Trend.keys());
-    if (res.length === 0) await readAllTasks(0, MAX_TREND, {});
-    console.log(res);
-    return res;
+    let databaseTrend = await Trends.find({});
+    if (databaseTrend.length === 0) await readAllTasks(0, MAX_TREND, {});
+    else {
+        let res = new Array(...databaseTrend[0].Trend.keys());
+        console.log(res);
+        return res;
+    }
 }
 
 /**
@@ -336,47 +347,79 @@ async function editTask(taskID, userID, task) {
  * (https://yongsub.me/resources/papers/kais17.pdf)
  * @param {String} taskID : id of the task
  */
-function updateTrend(taskID) {
-    let cur = Date.now(),
-        delta = cur - last;
-    delta = delta / 1000; // convert to seconds
-    delta = delta / 20; // convert to time step of 20s
-    delta = Math.ceil(delta); // round up
+async function updateTrend(taskID) {
+    try {
+        let databaseTrend = await Trends.find({}),
+            lastTrend;
 
-    // update tasks in Trend
-    if (delta > 4320 + lastStep)
-        // being out of 24-hour window, which is too small to be worth considering
-        // 0.989^4320 ~ 1.75e-21
-        Trend.forEach((value, key) => {
-            Trend.set(key, new Big(0));
-        });
-    else if (delta > lastStep) {
-        // different window than the last one, making it necessary to multiply the time decaying factor
-        let decay = new Big(alp).pow(delta);
-        Trend.forEach((value, key) => {
-            Trend.set(key, value.times(decay));
-        });
-    }
+        console.log(databaseTrend);
+        if (databaseTrend.length === 0)
+            lastTrend = {
+                Trend: new Map(),
+                lastStep: 0,
+                last: new Date("2001-07-08T09:00:00+0700").getTime()
+            };
+        else lastTrend = databaseTrend[0];
 
-    // update time counter
-    last = cur;
-    lastStep = delta;
+        let cur = Date.now(),
+            delta = cur - lastTrend.last;
+        delta = delta / 1000; // convert to seconds
+        delta = delta / 20; // convert to time step of 20s
+        delta = Math.ceil(delta); // round up
 
-    // update Trend
-    if (Trend.has(taskID)) Trend.set(taskID, Trend.get(taskID) + 1);
-    else if (Trend.size < MAX_TREND) Trend.set(taskID, 1);
-    else {
-        let outdateTask_Counter = new Big(-1),
-            outdateTask_id;
-        Trend.forEach((value, key) => {
-            if (outdateTask_Counter.eq(-1) || outdateTask_Counter.gt(value))
-                (outdateTask_id = key), (outdateTask_Counter = value);
-        });
-
-        if (outdateTask_Counter.lt(1)) {
-            Trend.delete(outdateTask_id);
-            Trend.set(taskID, 1);
+        // update tasks in Trend
+        if (delta > 4320 + lastTrend.lastStep)
+            // being out of 24-hour window, which is too small to be worth considering
+            // 0.989^4320 ~ 1.75e-21
+            lastTrend.Trend.forEach((value, key) => {
+                lastTrend.Trend.set(key, new Big(0));
+            });
+        else if (delta > lastTrend.lastStep) {
+            // different window than the last one, making it necessary to multiply the time decaying factor
+            let decay = new Big(alp).pow(delta);
+            lastTrend.Trend.forEach((value, key) => {
+                lastTrend.Trend.set(key, value.times(decay));
+            });
         }
+
+        // update time counter
+        lastTrend.last = cur;
+        lastTrend.lastStep = delta;
+
+        // update Trend
+        if (lastTrend.Trend.has(taskID))
+            lastTrend.Trend.set(taskID, Trend.get(taskID) + 1);
+        else if (lastTrend.Trend.size < MAX_TREND)
+            lastTrend.Trend.set(taskID, 1);
+        else {
+            let outdateTask_Counter = new Big(-1),
+                outdateTask_id;
+            lastTrend.Trend.forEach((value, key) => {
+                if (outdateTask_Counter.eq(-1) || outdateTask_Counter.gt(value))
+                    (outdateTask_id = key), (outdateTask_Counter = value);
+            });
+
+            if (outdateTask_Counter.lt(1)) {
+                lastTrend.Trend.delete(outdateTask_id);
+                lastTrend.Trend.set(taskID, 1);
+            }
+        }
+
+        //save into database
+        let newTrend = new Trends(lastTrend);
+        if (databaseTrend.length === 0)
+            newTrend.save(function(err) {
+                if (err) throw err;
+            });
+        else
+            Trends.updateOne(
+                {
+                    _id: database[0]._id
+                },
+                newTrend
+            );
+    } catch (err) {
+        if (err) throw err;
     }
 }
 
@@ -397,7 +440,7 @@ async function subscribe(taskID, userID) {
             }
         );
         if (!participants.has(userID)) {
-            updateTrend(taskID);
+            await updateTrend(taskID);
             participants.set(userID, userID);
         }
         await Tasks.updateOne(
