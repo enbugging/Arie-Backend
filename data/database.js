@@ -58,7 +58,6 @@ var Tasks = mongoose.model("Tasks", task);
  * @param {String} gmailAddress : Gmail address of user
  * @param {Map} results : a map contains many small maps, each map corresponds with id of a task
  * storing id of finished checkpoints
- * @param {Map} sessions : a map contains existing sessions
  */
 var user = new Schema({
     name: String,
