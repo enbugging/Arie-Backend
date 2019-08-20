@@ -5,10 +5,11 @@ This is API and Database infrastructure being specifically built for Arie applic
 <b> API Guide </b>
  Routes in this API, by order
  1. API for users
- - GET tasks/user/:userId : retrieve data of an user
  - POST tasks/user : login to database
+ - DELETE tasks/user : logout from database
+ - GET tasks/user/:userID : retrieve subscribed tasks' data of an user
  - PATCH tasks/user/:userID : update results
- - DELETE tasks/user/:userId : logout from database
+ - GET tasks/user/mytasks/:userID : retrieve tasks having been created by that user
  2. API for tasks
  - POST tasks : create new task
  - GET tasks/?idx= & count= : retrieve general info of number of tasks
