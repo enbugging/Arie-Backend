@@ -1,11 +1,11 @@
 /**
  * Routes in this API, by order
  * - API for users
+ * GET tasks/user : retrieve subscribed tasks' data of an user
  * POST tasks/user : login to database
+ * PATCH tasks/user : update results
  * DELETE tasks/user : logout from database
- * GET tasks/user/:userID : retrieve subscribed tasks' data of an user
- * PATCH tasks/user/:userID : update results
- * GET tasks/user/mytasks/:userID : retrieve tasks having been created by that user
+ * GET tasks/user/mytasks : retrieve tasks having been created by that user
  *
  * - API for tasks
  * POST tasks : create new task
@@ -13,10 +13,10 @@
  * (including custom parameters to search)
  * GET tasks/trending : retrieve top 5 trending tasks (or all tasks if there're less than 5)
  * GET tasks/:taskID : retrieve details of a particular task
- * PATCH tasks/:taskID?userID= : edit existing task
- * DELETE tasks/:taskID?userID= : delete existing task
- * POST tasks/:taskID?userID= : subscribe to a task
- * DELETE tasks/unsubscribe/:taskID?userID= : unsubscribe to a task
+ * PATCH tasks/:taskID : edit existing task
+ * DELETE tasks/:taskID : delete existing task
+ * POST tasks/:taskID : subscribe to a task
+ * DELETE tasks/unsubscribe/:taskID : unsubscribe to a task
  */
 
 "use strict";
@@ -31,34 +31,10 @@ const router = express.Router();
 
 router
     .route("/user")
-    .post(bodyParser.json(), (req, res) => {
-        let user = req.body;
-        database.login(user).then(
-            res => {
-                req.session.token = res;
-                res.sendStatus(200);
-            },
-            err => {
-                console.log(err.message);
-                res.sendStatus(400);
-            }
-        );
-    })
-    .delete((req, res) => {
-        req.session.destroy(function(err) {
-            if (err) {
-                console.log(err.message);
-                res.sendStatus(400);
-            } else res.sendStatus(200);
-        });
-    });
-
-router
-    .route("/user/:userID")
     .get((req, res) => {
-        let userID = req.params.userID;
+        let userID = req.session.token;
 
-        if (userID.length === 0) res.sendStatus(400);
+        if (userID === undefined || userID.length === 0) res.sendStatus(400);
         else {
             database.fetchResults(userID).then(
                 docs => {
@@ -71,8 +47,24 @@ router
             );
         }
     })
+    .post(bodyParser.json(), (req, res) => {
+        let user = req.body;
+        console.log(user);
+
+        database.login(user).then(
+            respond => {
+                console.log(respond);
+                req.session.token = respond;
+                res.sendStatus(200);
+            },
+            err => {
+                console.log(err.message);
+                res.sendStatus(400);
+            }
+        );
+    })
     .patch(bodyParser.json(), (req, res) => {
-        let userID = req.params.userID,
+        let userID = req.session.token,
             results = body;
 
         if (userID.length === 0) res.sendStatus(400);
@@ -86,11 +78,20 @@ router
                     res.sendStatus(400);
                 }
             );
+    })
+    .delete((req, res) => {
+        req.session.destroy(function(err) {
+            if (err) {
+                console.log(err.message);
+                res.sendStatus(400);
+            } else res.sendStatus(200);
+        });
     });
 
-router.route("/user/mytasks/:userID").get((req, res) => {
-    let userID = req.params.userID;
-    if (userID.length === 0) res.sendStatus(400);
+router.route("/user/mytasks").get((req, res) => {
+    let userID = req.session.token;
+    console.log(userID);
+    if (userID === undefined || userID.length === 0) res.sendStatus(400);
     else
         database.readMyTasks(userID).then(
             docs => {
@@ -114,10 +115,7 @@ router
         idx = Number(idx);
         count = Number(count);
         if (queryTask.name) searchTask.name = RegExp(queryTask.name, "i");
-        if (queryTask.creatorID)
-            searchTask.creatorID = RegExp(queryTask.creatorID);
-        if (queryTask.creatorName)
-            searchTask.creatorName = RegExp(queryTask.creatorName);
+        searchTask.creatorID = RegExp(req.session.token);
         if (queryTask.checkpoints)
             searchTask.checkpoints = RegExp(queryTask.checkpoints);
         if (queryTask.startTime)
@@ -139,6 +137,8 @@ router
     })
     .post(bodyParser.json(), (req, res) => {
         let task = req.body;
+        task.creatorID = req.session.token;
+        console.log(task.creatorID);
         database.createTask(task).then(
             () => {
                 res.sendStatus(200);
@@ -185,7 +185,7 @@ router
         let queryTask = req.body,
             updateTask = {},
             taskID = req.params.taskID,
-            userID = req.query.userID;
+            userID = req.session.token;
 
         if (queryTask.name) updateTask.name = queryTask.name;
         if (queryTask.description)
@@ -195,7 +195,8 @@ router
         if (queryTask.startTime) updateTask.startTime = queryTask.startTime;
         if (queryTask.endTime) updateTask.endTime = queryTask.endTime;
 
-        if (taskID.length === 0 || userID.length === 0) res.sendStatus(400);
+        if (taskID.length === 0 || userID == undefined || userID.length === 0)
+            res.sendStatus(400);
         else
             database.editTask(taskID, userID, updateTask).then(
                 () => {
@@ -208,10 +209,11 @@ router
             );
     })
     .delete((req, res) => {
-        let userID = req.query.userID,
+        let userID = req.session.token,
             taskID = req.params.taskID;
 
-        if (taskID.length === 0 || userID.length === 0) res.sendStatus(400);
+        if (taskID.length === 0 || userID === undefined || userID.length === 0)
+            res.sendStatus(400);
         else
             database.deleteTask(taskID, userID).then(
                 () => {
@@ -224,7 +226,7 @@ router
             );
     })
     .post((req, res) => {
-        let userID = req.query.userID,
+        let userID = req.session.token,
             taskID = req.params.taskID;
 
         if (taskID.length === 0 || userID.length === 0) res.sendStatus(400);
@@ -241,7 +243,7 @@ router
     });
 
 router.route("/unsubscribe/:taskID").delete((req, res) => {
-    let userID = req.query.userID,
+    let userID = req.session.token,
         taskID = req.params.taskID;
 
     if (taskID.length === 0 || userID.length === 0) res.sendStatus(400);

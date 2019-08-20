@@ -1,7 +1,6 @@
-const { request } = require("./test_helper.js"),
+const { request, fakeRequest } = require("./test_helper.js"),
     database = require("../data/database.js"),
-    lodash = require("lodash"),
-    { user } = require("../test/create_test.js");
+    lodash = require("lodash");
 
 require("./read_test.js");
 
@@ -19,8 +18,9 @@ describe("Updating tasks", () => {
     });
 
     it("unauthorizedly attempt to update a task", function(done) {
-        request
-            .patch(`/api/tasks/${task._id}?userID=megumitadokoro`)
+        fakeRequest
+            .patch(`/api/tasks/${task._id}`)
+            .set("Cookie", "abcdef")
             .send(task)
             .expect(400, function(err) {
                 if (err) done(err);
@@ -30,7 +30,7 @@ describe("Updating tasks", () => {
 
     it("update a non-existent task", function(done) {
         request
-            .patch(`/api/tasks/abcdef?userID=${user._id}`)
+            .patch(`/api/tasks/abcdef`)
             .send(task)
             .expect(400, function(err) {
                 if (err) done(err);
@@ -45,7 +45,7 @@ describe("Updating tasks", () => {
         newTask.endTime = temp;
 
         request
-            .patch(`/api/tasks/${task._id}?userID=${user._id}`)
+            .patch(`/api/tasks/${task._id}`)
             .send(newTask)
             .expect(400, function(err) {
                 if (err) done(err);
@@ -58,7 +58,7 @@ describe("Updating tasks", () => {
         newTask.startTime = "2019-08-05T08:34:00+07:00";
 
         request
-            .patch(`/api/tasks/${task._id}?userID=${user._id}`)
+            .patch(`/api/tasks/${task._id}`)
             .send(newTask)
             .expect(400, function(err) {
                 if (err) done(err);
@@ -68,7 +68,7 @@ describe("Updating tasks", () => {
 
     it("update a task", function(done) {
         request
-            .patch(`/api/tasks/${task._id}?userID=${user._id}`)
+            .patch(`/api/tasks/${task._id}`)
             .send(task)
             .expect(200, function(err) {
                 if (err) done(err);
@@ -77,17 +77,15 @@ describe("Updating tasks", () => {
     });
 
     it("subscribe to a task", function(done) {
-        request
-            .post(`/api/tasks/${task._id}?userID=megumitadokoro`)
-            .expect(200, function(err) {
-                if (err) done(err);
-                else done();
-            });
+        request.post(`/api/tasks/${task._id}`).expect(200, function(err) {
+            if (err) done(err);
+            else done();
+        });
     });
 
     it("unsubscribe to a task", function(done) {
         request
-            .delete(`/api/tasks/unsubscribe/${task._id}?userID=megumitadokoro`)
+            .delete(`/api/tasks/unsubscribe/${task._id}`)
             .expect(200, function(err) {
                 if (err) done(err);
                 else done();

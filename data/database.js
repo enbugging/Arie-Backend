@@ -3,7 +3,7 @@
 const mongoose = require("mongoose"),
     Schema = mongoose.Schema,
     Big = require("big.js"),
-    fetch = require("node-fetch");
+    got = require("got");
 
 /**
  * Definitinon of a Checkpoint
@@ -30,7 +30,6 @@ var Checkpoints = mongoose.model("Checkpoints", checkpoint);
  * Definition of a Task
  * @param {String} name : name of the task
  * @param {String} creatorID : ID of the creator
- * @param {String} creatorName : name of the creator
  * @param {String} description : description of the task
  * @param {Array} checkpoints : checkpoints where the task will take place
  * @param {Date} createTime : timestamp of task's creation
@@ -96,31 +95,31 @@ async function login(user) {
     let query;
     try {
         console.log(user.accessToken);
-        let res = await fetch(
-            `https://www.googleapis.com/oauth2/v3/tokeninfo`,
-            {
-                header: {
-                    Authorization: "Bearer" + user.accessToken
-                }
+        let res = await got(`https://www.googleapis.com/oauth2/v3/userinfo`, {
+            headers: {
+                Authorization: "Bearer " + user.accessToken
             }
-        );
-        if (!res.ok) throw new Error("Non-existent user");
-        else query = await Users.findOne({ gmailAddress: res.email });
+        });
+        if (res.statusCode !== 200) throw new Error("Non-existent user");
+        else {
+            console.log("Verified user");
+            query = await Users.findOne({ gmailAddress: res.email });
+        }
 
         if (query) {
             // existed user => update name if necessary
-            if (query.name !== res.name) {
-                // update name
-                Users.updateOne(
-                    { _id: query._id },
-                    {
-                        name: res.name
-                    }
-                );
-            }
+            // if (query.name !== res.name) {
+            //     // update name
+            //     Users.updateOne(
+            //         { _id: query._id },
+            //         {
+            //             name: res.name
+            //         }
+            //     );
+            // }
 
             // return ID of user, being used as session cookie
-            return query._id;
+            return query.id;
         } else {
             // new user => create new one
             var newUser = new Users({
@@ -129,12 +128,10 @@ async function login(user) {
                 results: new Map()
             });
 
-            newUser.save(function(err) {
-                if (err) throw err;
-            });
+            let doc = await newUser.save();
 
             // return ID of user, being used as session cookie
-            return newUser._id;
+            return newUser.id;
         }
     } catch (err) {
         throw err;
@@ -164,7 +161,7 @@ async function updateResults(userID, newResults) {
 
         // save into database
         await Users.updateOne(
-            { _id: userId },
+            { _id: userID },
             {
                 results: combinedResults
             }
@@ -253,6 +250,7 @@ async function readOneTask(taskID) {
  */
 async function createTask(task) {
     try {
+        console.log(task.creatorID);
         let start = new Date(task.startTime),
             end = new Date(task.endTime),
             now = Date.now(),
@@ -276,6 +274,7 @@ async function createTask(task) {
                 );
         }
 
+        task.creatorName = await Users.findById(task.creatorID, "name");
         var newTask = new Tasks({
             name: task.name,
             creatorID: task.creatorID,

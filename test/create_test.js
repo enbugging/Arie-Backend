@@ -1,6 +1,6 @@
 // Testing creating functions in databse
 const database = require("../data/database.js"),
-    { request } = require("./test_helper.js");
+    { request, fakeRequest } = require("./test_helper.js");
 
 const user = new database.Users({
     name: "Megumi Tadokoro",
@@ -17,12 +17,23 @@ const checkpoint = {
 };
 
 describe("Creating new tasks", () => {
-    before(function(done) {
-        user.save(function(err) {
-            if (err) throw err;
+    it("login", done => {
+        const token = new Object({
+            accessToken:
+                "ya29.GltqBxJKtnzWS1BOM1DAH_33PS8nAsJ4k-Xy-w899NjIEllaWWNJ-SVzgflij0S8Qz24zvFM06ILVxEexKNVqqRBdvvrjSz9PRVr68WkbvkDEFplk8XxYkL8GH2s"
         });
-        done();
+
+        request
+            .post(`/api/tasks/user`)
+            .send(token)
+            .expect(200, function(err) {
+                if (err) done(err);
+                else {
+                    done();
+                }
+            });
     });
+
     it("create a task with non-existent creator", done => {
         let now = new Date(Date.now()),
             later = new Date(Date.now());
@@ -32,15 +43,13 @@ describe("Creating new tasks", () => {
 
         const task = new database.Tasks({
             name: "Test task",
-            creatorID: "A06", 
-            creatorName: "Megumi Tadokor",
             description: "This is a testing task",
             checkpoints: [checkpoint],
             startTime: now.toString(),
             endTime: later.toString()
         });
 
-        request
+        fakeRequest
             .post(`/api/tasks`)
             .send(task)
             .expect(400, function(err) {
@@ -66,8 +75,6 @@ describe("Creating new tasks", () => {
 
         const task = new database.Tasks({
             name: "Test task",
-            creatorID: user._id,
-            creatorName: user.name, 
             description: "This is a testing task",
             checkpoints: [false_checkpoint],
             startTime: now.toString(),
@@ -85,8 +92,6 @@ describe("Creating new tasks", () => {
     it("create a new task with invalid start/end time", done => {
         const task = new database.Tasks({
             name: "Test task",
-            creatorID: user._id,
-            creatorName: user.name, 
             description: "This is a testing task",
             checkpoints: [checkpoint],
             startTime: "2019-08-12T08:34:00+07:00",
@@ -107,8 +112,6 @@ describe("Creating new tasks", () => {
 
         const task = new database.Tasks({
             name: "Test task",
-            creatorID: user._id,
-            creatorName: user.name, 
             description: "This is a testing task",
             checkpoints: [checkpoint],
             startTime: "2019-08-05T08:34:00+07:00",
@@ -126,8 +129,6 @@ describe("Creating new tasks", () => {
     it("create a new task having already ended", done => {
         const task = new database.Tasks({
             name: "Test task",
-            creatorID: user._id,
-            creatorName: user.name, 
             description: "This is a testing task",
             checkpoints: [checkpoint],
             startTime: "2019-08-05T08:34:00+07:00",
@@ -151,8 +152,6 @@ describe("Creating new tasks", () => {
 
         const task = new database.Tasks({
             name: "Test task",
-            creatorID: user._id,
-            creatorName: user.name, 
             description: "This is a testing task",
             checkpoints: [checkpoint],
             startTime: now.toString(),

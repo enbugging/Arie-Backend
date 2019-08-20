@@ -1,6 +1,7 @@
 const supertest = require("supertest"),
     { app, db, serv } = require("../index.js"),
-    request = supertest(app);
+    request = supertest.agent(app),
+    fakeRequest = supertest(app);
 
 // Make sure that the server having been turned on before executing tests
 before(function(done) {
@@ -29,4 +30,4 @@ after(function(done) {
     }
 });
 
-module.exports = { request };
+module.exports = { request, fakeRequest };
