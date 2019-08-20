@@ -34,7 +34,7 @@ app.use(
         saveUninitialized: true,
         resave: false,
         store: store,
-        cookie: { secure: false }
+        cookie: { secure: (process.NODE_ENV === "test" ? false : true) }
     })
 );
 
