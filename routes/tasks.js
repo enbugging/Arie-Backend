@@ -1,10 +1,11 @@
 /**
  * Routes in this API, by order
  * - API for users
- * GET tasks/user/:userId : retrieve data of an user
  * POST tasks/user : login to database
+ * DELETE tasks/user : logout from database
+ * GET tasks/user/:userID : retrieve subscribed tasks' data of an user
  * PATCH tasks/user/:userID : update results
- * DELETE tasks/user/:userId : logout from database
+ * GET tasks/user/mytasks/:userID : retrieve tasks having been created by that user
  *
  * - API for tasks
  * POST tasks : create new task
@@ -30,8 +31,32 @@ const router = express.Router();
 
 router
     .route("/user")
+    .post(bodyParser.json(), (req, res) => {
+        let user = req.body;
+        database.login(user).then(
+            () => {
+                req.session = user.accessToken;
+                res.sendStatus(200);
+            },
+            err => {
+                console.log(err.message);
+                res.sendStatus(400);
+            }
+        );
+    })
+    .delete((req, res) => {
+        req.session.destroy(function(err) {
+            if (err) {
+                console.log(err.message);
+                res.sendStatus(400);
+            } else res.sendStatus(200);
+        });
+    });
+
+router
+    .route("/user/:userID")
     .get((req, res) => {
-        let userID = req.query.userID;
+        let userID = req.params.userID;
 
         if (userID.length === 0) res.sendStatus(400);
         else {
@@ -46,21 +71,8 @@ router
             );
         }
     })
-    .post(bodyParser.json(), (req, res) => {
-        let user = req.body;
-        database.login(user).then(
-            () => {
-                req.session = user.accessToken;
-                res.sendStatus(200);
-            },
-            err => {
-                console.log(err.message);
-                res.sendStatus(400);
-            }
-        );
-    })
     .patch(bodyParser.json(), (req, res) => {
-        let userID = req.query.userID,
+        let userID = req.params.userID,
             results = body;
 
         if (userID.length === 0) res.sendStatus(400);
@@ -74,16 +86,22 @@ router
                     res.sendStatus(400);
                 }
             );
-    })
-    .delete(bodyParser.json(), (req, res) => {
-        let user = req.body;
-        req.session.destroy(function(err) {
-            if (err) {
+    });
+
+router.route("/user/mytasks/:userID").get((req, res) => {
+    let userID = req.params.userID;
+    if (userID.length === 0) res.sendStatus(400);
+    else
+        database.readMyTasks(userID).then(
+            docs => {
+                res.status(200).send(docs);
+            },
+            err => {
                 console.log(err.message);
                 res.sendStatus(400);
-            } else res.sendStatus(200);
-        });
-    });
+            }
+        );
+});
 
 // API for tasks
 router
@@ -96,8 +114,10 @@ router
         idx = Number(idx);
         count = Number(count);
         if (queryTask.name) searchTask.name = RegExp(queryTask.name, "i");
-        if (queryTask.creatorID) searchTask.creatorID = RegExp(queryTask.creatorID);
-        if (queryTask.creatorName) searchTask.creatorName = RegExp(queryTask.creatorName);
+        if (queryTask.creatorID)
+            searchTask.creatorID = RegExp(queryTask.creatorID);
+        if (queryTask.creatorName)
+            searchTask.creatorName = RegExp(queryTask.creatorName);
         if (queryTask.checkpoints)
             searchTask.checkpoints = RegExp(queryTask.checkpoints);
         if (queryTask.startTime)

@@ -202,6 +202,18 @@ async function readAllTasks(IDX, count, task) {
     return res;
 }
 
+async function readMyTasks(userID) {
+    let res, search;
+    try {
+        search = await Users.findById(userID);
+        if(!search) throw new Error("Non-existent user");
+        res = await Tasks.find({ creatorID: userID });
+    } catch (err) {
+        if (err) throw err;
+    }
+    return res;
+}
+
 async function readTrendings() {
     let databaseTrend = await Trends.find({});
     if (databaseTrend.length === 0) await readAllTasks(0, MAX_TREND, {});
@@ -509,6 +521,7 @@ module.exports = {
     updateResults,
     fetchResults,
     readAllTasks,
+    readMyTasks,
     readTrendings,
     readOneTask,
     createTask,
