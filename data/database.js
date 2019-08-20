@@ -101,8 +101,8 @@ async function login(user) {
                 Authorization: "Bearer" + user.accessToken
             }
         }).then(res => {
-            if(!res.ok) throw new Error("Non-existent user");
-        })
+            if (!res.ok) throw new Error("Non-existent user");
+        });
 
         query = await Users.findOne({ gmailAddress: user.gmailAddress });
         if (query) {
@@ -116,6 +116,9 @@ async function login(user) {
                     }
                 );
             }
+
+            // return ID of user, being used as session cookie
+            return query._id;
         } else {
             // new user => create new one
             var newUser = new Users({
@@ -127,6 +130,9 @@ async function login(user) {
             newUser.save(function(err) {
                 if (err) throw err;
             });
+
+            // return ID of user, being used as session cookie
+            return newUser._id;
         }
     } catch (err) {
         throw err;
@@ -206,7 +212,7 @@ async function readMyTasks(userID) {
     let res, search;
     try {
         search = await Users.findById(userID);
-        if(!search) throw new Error("Non-existent user");
+        if (!search) throw new Error("Non-existent user");
         res = await Tasks.find({ creatorID: userID });
     } catch (err) {
         if (err) throw err;

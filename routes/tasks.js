@@ -34,8 +34,8 @@ router
     .post(bodyParser.json(), (req, res) => {
         let user = req.body;
         database.login(user).then(
-            () => {
-                req.session.token = user.accessToken;
+            res => {
+                req.session.token = res;
                 res.sendStatus(200);
             },
             err => {
