@@ -33,7 +33,8 @@ app.use(
         secret: "I love Mai Anh-senpai",
         saveUninitialized: true,
         resave: false,
-        store: store
+        store: store,
+        cookie: { secure: true }
     })
 );
 
