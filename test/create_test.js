@@ -32,7 +32,8 @@ describe("Creating new tasks", () => {
 
         const task = new database.Tasks({
             name: "Test task",
-            creator: "Megumi Tadokor",
+            creatorID: "A06", 
+            creatorName: "Megumi Tadokor",
             description: "This is a testing task",
             checkpoints: [checkpoint],
             startTime: now.toString(),
@@ -65,7 +66,8 @@ describe("Creating new tasks", () => {
 
         const task = new database.Tasks({
             name: "Test task",
-            creator: user._id,
+            creatorID: user._id,
+            creatorName: user.name, 
             description: "This is a testing task",
             checkpoints: [false_checkpoint],
             startTime: now.toString(),
@@ -83,7 +85,8 @@ describe("Creating new tasks", () => {
     it("create a new task with invalid start/end time", done => {
         const task = new database.Tasks({
             name: "Test task",
-            creator: user._id,
+            creatorID: user._id,
+            creatorName: user.name, 
             description: "This is a testing task",
             checkpoints: [checkpoint],
             startTime: "2019-08-12T08:34:00+07:00",
@@ -104,7 +107,8 @@ describe("Creating new tasks", () => {
 
         const task = new database.Tasks({
             name: "Test task",
-            creator: user._id,
+            creatorID: user._id,
+            creatorName: user.name, 
             description: "This is a testing task",
             checkpoints: [checkpoint],
             startTime: "2019-08-05T08:34:00+07:00",
@@ -122,7 +126,8 @@ describe("Creating new tasks", () => {
     it("create a new task having already ended", done => {
         const task = new database.Tasks({
             name: "Test task",
-            creator: user._id,
+            creatorID: user._id,
+            creatorName: user.name, 
             description: "This is a testing task",
             checkpoints: [checkpoint],
             startTime: "2019-08-05T08:34:00+07:00",
@@ -146,7 +151,8 @@ describe("Creating new tasks", () => {
 
         const task = new database.Tasks({
             name: "Test task",
-            creator: user._id,
+            creatorID: user._id,
+            creatorName: user.name, 
             description: "This is a testing task",
             checkpoints: [checkpoint],
             startTime: now.toString(),

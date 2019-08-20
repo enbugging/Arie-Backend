@@ -29,7 +29,8 @@ var Checkpoints = mongoose.model("Checkpoints", checkpoint);
 /**
  * Definition of a Task
  * @param {String} name : name of the task
- * @param {String} creator : ID of the creator
+ * @param {String} creatorID : ID of the creator
+ * @param {String} creatorName : name of the creator
  * @param {String} description : description of the task
  * @param {Array} checkpoints : checkpoints where the task will take place
  * @param {Date} createTime : timestamp of task's creation
@@ -39,7 +40,8 @@ var Checkpoints = mongoose.model("Checkpoints", checkpoint);
  */
 var task = new Schema({
     name: String,
-    creator: String,
+    creatorID: String,
+    creatorName: String,
     description: String,
     checkpoints: [checkpoint],
     createTime: Date,
@@ -234,7 +236,7 @@ async function createTask(task) {
         let start = new Date(task.startTime),
             end = new Date(task.endTime),
             now = Date.now(),
-            creator = await Users.findById(task.creator);
+            creator = await Users.findById(task.creatorID);
 
         if (!creator) throw new Error("Non-existent creator");
 
@@ -256,7 +258,8 @@ async function createTask(task) {
 
         var newTask = new Tasks({
             name: task.name,
-            creator: task.creator,
+            creatorID: task.creatorID,
+            creatorName: task.creatorName,
             description: task.description,
             checkpoints: task.checkpoints.map(doc => new Checkpoints(doc)),
             createTime: now,
@@ -296,7 +299,7 @@ async function editTask(taskID, userID, task) {
 
         res = await Tasks.findById(taskID);
 
-        if (res.creator === userID) {
+        if (res.creatorID === userID) {
             let oldStart = new Date(res.startTime).getTime(),
                 oldEnd = new Date(res.endTime).getTime();
             if (oldStart > now) {
@@ -491,7 +494,7 @@ async function deleteTask(taskID, userID) {
     let res;
     try {
         res = await Tasks.findById(taskID);
-        if (res.creator === userID) await Tasks.deleteOne({ _id: taskID });
+        if (res.creatorID === userID) await Tasks.deleteOne({ _id: taskID });
         else throw new Error("Unauthorized attempt to delete tasks!");
     } catch (err) {
         throw err;
