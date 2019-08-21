@@ -444,7 +444,7 @@ async function updateTrend(taskID) {
         else
             Trends.updateOne(
                 {
-                    _id: database[0]._id
+                    _id: databaseTrend[0]._id
                 },
                 newTrend
             );
