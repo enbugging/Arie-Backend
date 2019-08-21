@@ -32,7 +32,6 @@ const testCookieSetting = {
     secret: "I love Mai Anh-senpai",
     saveUninitialized: true,
     resave: true,
-    store: store,
     cookie: { secure: false }
 };
 
@@ -40,6 +39,7 @@ const prodCookieSetting = {
     secret: process.env.SECRET,
     saveUninitialized: true,
     resave: true,
+    store: store,
     cookie: {
         secure: true,
         httpOnly: true
