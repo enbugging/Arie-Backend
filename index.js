@@ -28,14 +28,28 @@ store.on("error", function(error) {
     console.log(error);
 });
 
+const testCookieSetting = {
+    secret: "I love Mai Anh-senpai",
+    saveUninitialized: true,
+    resave: true,
+    store: store,
+    cookie: { secure: false }
+};
+
+const prodCookieSetting = {
+    secret: process.env.SECRET,
+    saveUninitialized: true,
+    resave: true,
+    cookie: {
+        secure: true,
+        httpOnly: true
+    }
+};
+
 app.use(
-    session({
-        secret: "I love Mai Anh-senpai",
-        saveUninitialized: true,
-        resave: false,
-        store: store,
-        cookie: { secure: process.env.NODE_ENV === "test" ? false : true }
-    })
+    session(
+        process.env.NODE_ENV === "test" ? testCookieSetting : prodCookieSetting
+    )
 );
 
 app.on("ready", function() {
