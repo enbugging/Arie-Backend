@@ -39,6 +39,7 @@ const testCookieSetting = {
 
 const prodCookieSetting = {
     name: "ArieCookie",
+    domain: process.env.DOMAIN, 
     secret: process.env.SECRET,
     saveUninitialized: true,
     resave: true,
