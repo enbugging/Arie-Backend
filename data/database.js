@@ -121,7 +121,7 @@ async function login(user) {
             }
 
             // return ID of user, being used as session cookie
-            return query._id;
+            return query.id;
         } else {
             // new user => create new one
             var newUser = new Users({
@@ -133,7 +133,7 @@ async function login(user) {
             let doc = await newUser.save();
 
             // return ID of user, being used as session cookie
-            return newUser._id;
+            return newUser.id;
         }
     } catch (err) {
         throw err;
