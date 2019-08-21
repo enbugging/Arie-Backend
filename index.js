@@ -7,9 +7,11 @@ const http = require("https"),
     mongoose = require("mongoose"),
     path = require("path"),
     session = require("express-session"),
-    MongoDBStore = require("connect-mongodb-session")(session);
+    MongoDBStore = require("connect-mongodb-session")(session),
+    helmet = require("helmet");
 
 const app = express();
+app.use(helmet());
 app.use(morgan("dev"));
 
 const tasks = require("./routes/tasks");
@@ -36,6 +38,7 @@ const testCookieSetting = {
 };
 
 const prodCookieSetting = {
+    name: "ArieCookie",
     secret: process.env.SECRET,
     saveUninitialized: true,
     resave: true,
@@ -43,7 +46,8 @@ const prodCookieSetting = {
     cookie: {
         secure: true,
         httpOnly: true
-    }
+    },
+    proxy: true
 };
 
 app.use(
