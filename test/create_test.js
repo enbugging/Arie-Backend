@@ -20,7 +20,7 @@ describe("Creating new tasks", () => {
     it("login", done => {
         const token = new Object({
             accessToken:
-                "ya29.GltrB0bqKJ62tJQyEy1W_uP0_8qGw1ynH65EwY4pxqZBRZLszUjFqYdqzdZ-WDgHdH6VIGdKqLEn_DhPFXrwIAQ5gAUlf-IlmBIq6pbaHIC1rhmWXH_0zJUVj-Ff"
+                "ya29.GltrB6uoiYPM3NuC_Jdg4dri-Up_UWN8tNmz_cDq-4F5x9wZ0We1lYYJbKFMsiG5B8gBJ-_SGlepNuPwDTZye1FdJj1zH2ALAWEVEVjwf9oBiFCzlkZvjKimmyCT"
         });
 
         request

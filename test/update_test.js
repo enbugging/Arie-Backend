@@ -76,6 +76,14 @@ describe("Updating tasks", () => {
             });
     });
 
+    it("read trending tasks", function(done) {
+        request.get(`/api/tasks/trending`).expect(200, function(err, res) {
+            console.log(res.body);
+            if (err) done(err);
+            else done();
+        });
+    });
+
     it("subscribe to a task", function(done) {
         request.post(`/api/tasks/${task._id}`).expect(200, function(err) {
             if (err) done(err);
@@ -93,7 +101,8 @@ describe("Updating tasks", () => {
     });
 
     it("read trending tasks", function(done) {
-        request.get(`/api/tasks/trending`).expect(200, function(err) {
+        request.get(`/api/tasks/trending`).expect(200, function(err, res) {
+            console.log(res.body);
             if (err) done(err);
             else done();
         });

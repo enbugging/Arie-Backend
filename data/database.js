@@ -30,7 +30,7 @@ var Checkpoints = mongoose.model("Checkpoints", checkpoint);
  * Definition of a Task
  * @param {String} name : name of the task
  * @param {String} creatorID : ID of the creator
- * @param {String} creatorName : name of the creator 
+ * @param {String} creatorName : name of the creator
  * @param {String} description : description of the task
  * @param {Array} checkpoints : checkpoints where the task will take place
  * @param {Date} createTime : timestamp of task's creation
@@ -223,12 +223,19 @@ async function readMyTasks(userID) {
 }
 
 async function readTrendings() {
-    let databaseTrend = await Trends.find({});
-    if (databaseTrend.length === 0) await readAllTasks(0, MAX_TREND, {});
-    else {
-        let res = new Array(...databaseTrend[0].Trend.keys());
-        console.log(res);
+    try {
+        let databaseTrend = await Trends.find({}),
+            res;
+        if (databaseTrend.length === 0) {
+            console.log("No subscribed tasks found");
+            res = await Tasks.find({}, "_id")
+                .sort({ createTime: 1 })
+                .limit(MAX_TREND);
+            res = res.map(doc => String(doc._id));
+        } else res = new Array(...databaseTrend[0].Trend.keys());
         return res;
+    } catch (err) {
+        throw err;
     }
 }
 
@@ -377,7 +384,6 @@ async function updateTrend(taskID) {
         let databaseTrend = await Trends.find({}),
             lastTrend;
 
-        console.log(databaseTrend);
         if (databaseTrend.length === 0)
             lastTrend = {
                 Trend: new Map(),
