@@ -93,7 +93,7 @@ var Trends = mongoose.model("Trends", trend);
  * @param {Users} user
  */
 async function login(user) {
-    let query;
+    let query, body;
     try {
         console.log(user.accessToken);
         let res = await got(`https://www.googleapis.com/oauth2/v3/userinfo`, {
@@ -103,11 +103,10 @@ async function login(user) {
         });
         if (res.statusCode !== 200) throw new Error("Non-existent user");
         else {
+            body = JSON.parse(res.body);
             console.log("Verified user");
-            query = await Users.findOne({ gmailAddress: res.body.email });
+            query = await Users.findOne({ gmailAddress: body.email });
         }
-
-        let body = JSON.parse(res.body);
 
         if (query) {
             // existed user => update name if necessary
@@ -122,19 +121,19 @@ async function login(user) {
             }
 
             // return ID of user, being used as session cookie
-            return query.id;
+            return query._id;
         } else {
             // new user => create new one
             var newUser = new Users({
                 name: body.name,
-                gmailAddress: user.gmailAddress,
+                gmailAddress: body.email,
                 results: new Map()
             });
 
             let doc = await newUser.save();
 
             // return ID of user, being used as session cookie
-            return newUser.id;
+            return newUser._id;
         }
     } catch (err) {
         throw err;
