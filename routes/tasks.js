@@ -115,7 +115,6 @@ router
         idx = Number(idx);
         count = Number(count);
         if (queryTask.name) searchTask.name = RegExp(queryTask.name, "i");
-        searchTask.creatorID = RegExp(req.session.token);
         if (queryTask.checkpoints)
             searchTask.checkpoints = RegExp(queryTask.checkpoints);
         if (queryTask.startTime)
